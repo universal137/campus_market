@@ -1,59 +1,59 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+## 校园易 · 校园二手交易与互助平台
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+本项目以 “校园二手交易与互助平台” 课程题目为核心，基于 Laravel 11 + MySQL 搭建，提供闲置物品发布、互助任务发布与展示的最小可运行版本，方便通过 `php artisan serve` 直接体验。
 
-## About Laravel
+### 快速开始
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+1. **复制 `.env.example` 并配置数据库**
+   ```bash
+   cp .env.example .env
+   ```
+   在 `.env` 中设置：
+   ```
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=campus_market
+   DB_USERNAME=root
+   DB_PASSWORD=你的密码
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+   SESSION_DRIVER=database
+   ```
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+2. **安装依赖并生成密钥**
+   ```bash
+   composer install
+   php artisan key:generate
+   ```
 
-## Learning Laravel
+3. **迁移 + 填充演示数据**
+   ```bash
+   php artisan migrate
+   php artisan db:seed
+   ```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+4. **运行项目**
+   ```bash
+   php artisan serve
+   ```
+   浏览器访问 http://127.0.0.1:8000 即可看到概览页，顶部导航可进入 “二手交易” 与 “互助任务” 页面，支持筛选、简单发布表单（未开启正式登录，仅用于演示流程）。
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 功能概览
 
-## Laravel Sponsors
+- **概览页**：展示热门分类、最新商品和互助任务，提供快捷导航；
+- **二手交易**：
+  - 分类/关键字筛选与分页；
+  - 简易发布表单（输入联系人昵称 + 校园邮箱 + 商品信息）；
+- **互助任务**：
+  - 任务状态、关键字筛选；
+  - 发布表单（昵称、邮箱、任务内容、奖励金额）；
+- **数据库结构**：`users`、`categories`、`items`、`tasks`、`sessions` 等核心表已通过迁移定义，Seeder 自动生成示例数据；
+- **会话存储**：默认使用数据库驱动，配合 `sessions` 表确保登录与状态管理可扩展。
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 下一步迭代建议
 
-### Premium Partners
+- 接入 Laravel Breeze / Fortify 以支持真正的注册、登录、邮箱验证；
+- 为商品与任务增加多图上传、订单状态流转、站内消息等模块；
+- 新增 Feature 测试覆盖发布与筛选流程，保障核心流程稳定。
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+如需更多信息，可查阅 `routes/web.php`、`app/Http/Controllers`、`resources/views` 等目录，了解当前的业务实现。*** End Patch

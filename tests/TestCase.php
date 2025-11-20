@@ -2,8 +2,8 @@
 
 namespace Tests;
 
-use Illuminate\Foundation\Testing\Concerns\CreatesApplication; // 让测试能够启动完整的 Laravel 应用
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Tests\CreatesApplication;
 
 abstract class TestCase extends BaseTestCase
 {

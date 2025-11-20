@@ -27,11 +27,14 @@ class DatabaseSeeder extends Seeder
             ->recycle($users)
             ->create();
 
-        // 5. 管理员账号
-        User::factory()->create([
-            'name' => 'Admin',
-            'email' => 'admin@example.com',
-            'password' => bcrypt('123456'),
-        ]);
+        // 5. 管理员账号，如果已经存在就复用
+        User::updateOrCreate(
+            ['email' => 'admin@example.com'],
+            [
+                'name' => 'Admin',
+                'password' => bcrypt('123456'),
+                'email_verified_at' => now(),
+            ]
+        );
     }
 }

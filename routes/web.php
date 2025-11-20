@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use App\Models\Item;
 use App\Models\Task;
 use App\Models\Category;
+use App\Http\Controllers\ItemController;
+use App\Http\Controllers\TaskController;
 
 Route::get('/', function () {
     // 获取所有分类
@@ -15,3 +17,9 @@ Route::get('/', function () {
 
     return view('welcome', compact('categories', 'items', 'tasks'));
 });
+
+Route::get('/items', [ItemController::class, 'index'])->name('items.index');
+Route::post('/items', [ItemController::class, 'store'])->name('items.store');
+
+Route::get('/tasks', [TaskController::class, 'index'])->name('tasks.index');
+Route::post('/tasks', [TaskController::class, 'store'])->name('tasks.store');
