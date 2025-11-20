@@ -23,8 +23,14 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        $namePool = [
+            '李晨', '王可可', '陈一宁', '刘思雨', '赵博宇',
+            '孙语桐', '周以诺', '吴嘉禾', '郑清扬', '何静怡',
+            '谢柏言', '潘意辰', '黄佳鑫', '陆星辰', '唐可欣',
+        ];
+
         return [
-            'name' => fake()->name(),
+            'name' => fake()->randomElement($namePool),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
