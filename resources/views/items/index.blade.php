@@ -40,9 +40,9 @@
         @endif
 
         <h3 style="margin-top:0;">快速发布一条二手商品</h3>
-        <p style="color:#94a3b8;margin-top:4px;">暂未接入账号系统，填写联系人信息即可体验发布流程</p>
+        <p style="color:#94a3b8;margin-top:4px;">暂未接入账号系统，填写联系人信息即可体验发布流程（推荐约在校园公共区域当面交易）</p>
 
-        <form method="POST" action="{{ route('items.store') }}" style="margin-top:16px;display:flex;flex-direction:column;gap:16px;">
+        <form id="publish-item-form" method="POST" action="{{ route('items.store') }}" style="margin-top:16px;display:flex;flex-direction:column;gap:16px;">
             @csrf
             @if ($errors->any())
                 <div class="error-msg">
@@ -86,7 +86,14 @@
 
             <div>
                 <label for="description">详情描述</label>
-                <textarea id="description" name="description" placeholder="成色、使用情况、交易地点等" required>{{ old('description') }}</textarea>
+                <textarea id="description" name="description" placeholder="成色、使用情况、打包赠品等" required>{{ old('description') }}</textarea>
+            </div>
+
+            <div>
+                <label for="deal_place">交易地点（可选）</label>
+                <input id="deal_place" name="deal_place" value="{{ old('deal_place') }}"
+                       placeholder="例如：东门奶茶店 / 图书馆一楼大厅 / 宿舍楼下公共区域">
+                <p style="color:#94a3b8;font-size:12px;margin-top:4px;">建议选择人流量较大的校园公共区域，优先当面当场验货交易。</p>
             </div>
 
             <button type="submit" class="btn btn-primary" style="align-self:flex-start;">发布商品</button>
@@ -102,6 +109,9 @@
                     <h4 style="margin:0 0 6px;">{{ $item->title }}</h4>
                     <p style="color:#475569;font-size:13px;margin:0 0 12px;">{{ \Illuminate\Support\Str::limit($item->description, 80) }}</p>
                     <p style="font-weight:700;font-size:18px;color:#ef4444;margin:0 0 10px;">¥{{ $item->price }}</p>
+                    <p style="color:#475569;font-size:12px;margin:0 0 8px;">
+                        交易地点：{{ $item->deal_place ?? '与卖家协商，推荐在校园公共区域' }}
+                    </p>
                     <p style="color:#94a3b8;font-size:12px;margin:0;">卖家：{{ $item->user->name }}</p>
                 </article>
             @empty
@@ -110,7 +120,7 @@
         </div>
 
         <div style="margin-top:20px;">
-            {{ $items->links() }}
+            {{ $items->links('pagination::simple-tailwind') }}
         </div>
     </section>
 @endsection

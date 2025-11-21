@@ -36,6 +36,16 @@ class ItemFactory extends Factory
             '画画专业用的工具箱，里面工具齐全，送几张我练习用的纸张。',
         ];
 
+        $dealPlacePool = [
+            '东门喜茶门口',
+            '南苑宿舍大厅',
+            '图书馆一楼服务台旁',
+            '体育馆正门台阶',
+            '食堂二楼自助区',
+            '创新楼大厅值班台',
+            '知行广场喷泉旁',
+        ];
+
         return [
             'user_id' => User::factory(),
             // 优先绑定数据库中的分类，无数据时自动生成一个新的分类
@@ -43,6 +53,7 @@ class ItemFactory extends Factory
             'title' => fake()->randomElement($titlePool),
             'description' => fake()->randomElement($descriptionPool),
             'price' => fake()->randomFloat(2, 5, 500),
+            'deal_place' => fake()->boolean(25) ? null : fake()->randomElement($dealPlacePool),
             'status' => 'on_sale',
         ];
     }

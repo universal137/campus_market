@@ -92,7 +92,7 @@
                                 <h4 style="margin:0 0 6px;">{{ $task->title }}</h4>
                                 <p style="color:#94a3b8;font-size:12px;margin:0;">发布人：{{ $task->user->name }}</p>
                             </div>
-                            <span class="status-pill" style="{{ $task->status === 'completed' ? 'background:#fee2e2;color:#b91c1c;' : 'background:#dcfce7;color:#14532d;' }}">
+                            <span class="status-pill {{ $task->status === 'completed' ? 'status-pill--danger' : 'status-pill--success' }}">
                                 {{ $task->status === 'completed' ? '已完成' : '招募中' }}
                             </span>
                         </div>
@@ -106,7 +106,7 @@
         </div>
 
         <div style="margin-top:20px;">
-            {{ $tasks->links() }}
+            {{ $tasks->links('pagination::simple-tailwind') }}
         </div>
     </section>
 @endsection

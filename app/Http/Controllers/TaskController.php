@@ -15,7 +15,11 @@ class TaskController extends Controller
         $query = Task::with('user')->latest();
 
         $status = $request->input('status');
-        if ($status) {
+        $allowedStatuses = ['open', 'completed'];
+        if (! in_array($status, $allowedStatuses, true)) {
+            $status = null;
+        }
+        if ($status !== null) {
             $query->where('status', $status);
         }
 
@@ -32,8 +36,8 @@ class TaskController extends Controller
         return view('tasks.index', [
             'tasks' => $tasks,
             'filters' => [
-                'status' => $status ?: null,
-                'q' => $keyword ?: null,
+                'status' => $status,
+                'q' => $keyword,
             ],
         ]);
     }
@@ -65,11 +69,19 @@ class TaskController extends Controller
             ]
         );
 
+        $reward = $validated['reward'] ?? null;
+        if (is_string($reward)) {
+            $reward = trim($reward);
+        }
+        if ($reward === '') {
+            $reward = null;
+        }
+
         Task::create([
             'user_id' => $user->id,
             'title' => $validated['title'],
             'content' => $validated['content'],
-            'reward' => $validated['reward'] ?: '面议',
+            'reward' => $reward ?? '面议',
             'status' => 'open',
         ]);
 

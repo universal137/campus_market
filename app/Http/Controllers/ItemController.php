@@ -18,7 +18,8 @@ class ItemController extends Controller
         $query = Item::with(['user', 'category'])->latest();
 
         $categoryId = $request->input('category');
-        if ($categoryId) {
+        $hasCategoryFilter = $categoryId !== null && $categoryId !== '';
+        if ($hasCategoryFilter) {
             $query->where('category_id', $categoryId);
         }
 
@@ -36,8 +37,8 @@ class ItemController extends Controller
             'items' => $items,
             'categories' => $categories,
             'filters' => [
-                'category' => $categoryId ?: null,
-                'q' => $keyword ?: null,
+                'category' => $hasCategoryFilter ? $categoryId : null,
+                'q' => $keyword,
             ],
         ]);
     }
@@ -60,6 +61,7 @@ class ItemController extends Controller
             'title' => ['required', 'string', 'max:120'],
             'description' => ['required', 'string', 'max:2000'],
             'price' => ['required', 'numeric', 'min:0'],
+            'deal_place' => ['nullable', 'string', 'max:120'],
         ]);
 
         $user = User::firstOrCreate(
@@ -76,6 +78,7 @@ class ItemController extends Controller
             'title' => $validated['title'],
             'description' => $validated['description'],
             'price' => $validated['price'],
+            'deal_place' => $validated['deal_place'] ?? null,
             'status' => 'on_sale',
         ]);
 

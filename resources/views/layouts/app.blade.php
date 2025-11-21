@@ -121,6 +121,14 @@
             background: #dbeafe;
             color: #1d4ed8;
         }
+        .status-pill--success {
+            background: #dcfce7;
+            color: #14532d;
+        }
+        .status-pill--danger {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
         @media (max-width: 640px) {
             header h1 { font-size: 22px; }
             .surface { padding: 20px; }
