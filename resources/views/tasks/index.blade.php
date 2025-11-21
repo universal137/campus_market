@@ -85,19 +85,21 @@
         <h3 style="margin-top:0;">最新互助需求</h3>
         <div style="display:flex;flex-direction:column;gap:16px;margin-top:18px;">
             @forelse($tasks as $task)
-                <article style="border:1px solid #e2e8f0;border-radius:14px;padding:18px;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
-                        <div>
-                            <h4 style="margin:0 0 6px;">{{ $task->title }}</h4>
-                            <p style="color:#94a3b8;font-size:12px;margin:0;">发布人：{{ $task->user->name }}</p>
+                <a href="{{ route('tasks.show', $task) }}" style="text-decoration:none;color:inherit;">
+                    <article style="border:1px solid #e2e8f0;border-radius:14px;padding:18px;cursor:pointer;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+                            <div>
+                                <h4 style="margin:0 0 6px;">{{ $task->title }}</h4>
+                                <p style="color:#94a3b8;font-size:12px;margin:0;">发布人：{{ $task->user->name }}</p>
+                            </div>
+                            <span class="status-pill" style="{{ $task->status === 'completed' ? 'background:#fee2e2;color:#b91c1c;' : 'background:#dcfce7;color:#14532d;' }}">
+                                {{ $task->status === 'completed' ? '已完成' : '招募中' }}
+                            </span>
                         </div>
-                        <span class="status-pill" style="{{ $task->status === 'completed' ? 'background:#fee2e2;color:#b91c1c;' : 'background:#dcfce7;color:#14532d;' }}">
-                            {{ $task->status === 'completed' ? '已完成' : '招募中' }}
-                        </span>
-                    </div>
-                    <p style="color:#475569;font-size:14px;margin:12px 0 8px;">{{ $task->content }}</p>
-                    <p style="color:#0f172a;font-weight:600;margin:0;">奖励：{{ $task->reward }}</p>
-                </article>
+                        <p style="color:#475569;font-size:14px;margin:12px 0 8px;">{{ $task->content }}</p>
+                        <p style="color:#0f172a;font-weight:600;margin:0;">奖励：{{ $task->reward }}</p>
+                    </article>
+                </a>
             @empty
                 <p style="color:#94a3b8;">暂无互助任务，快来发布第一条。</p>
             @endforelse

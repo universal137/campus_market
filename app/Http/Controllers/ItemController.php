@@ -42,6 +42,15 @@ class ItemController extends Controller
         ]);
     }
 
+    public function show(Item $item): View
+    {
+        $item->load(['user', 'category']);
+
+        return view('items.show', [
+            'item' => $item,
+        ]);
+    }
+
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([

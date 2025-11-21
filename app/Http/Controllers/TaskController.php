@@ -38,6 +38,15 @@ class TaskController extends Controller
         ]);
     }
 
+    public function show(Task $task): View
+    {
+        $task->load('user');
+
+        return view('tasks.show', [
+            'task' => $task,
+        ]);
+    }
+
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([

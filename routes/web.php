@@ -19,7 +19,9 @@ Route::get('/', function () {
 });
 
 Route::get('/items', [ItemController::class, 'index'])->name('items.index');
+Route::get('/items/{item}', [ItemController::class, 'show'])->name('items.show');
 Route::post('/items', [ItemController::class, 'store'])->name('items.store');
 
 Route::get('/tasks', [TaskController::class, 'index'])->name('tasks.index');
 Route::post('/tasks', [TaskController::class, 'store'])->name('tasks.store');
+Route::get('/tasks/{task}', [TaskController::class, 'show'])->name('tasks.show');
