@@ -14,16 +14,16 @@ class DatabaseSeeder extends Seeder
         // 1. 先创建分类
         $this->call(CategorySeeder::class);
 
-        // 2. 创建 10 个测试用户
-        $users = User::factory(10)->create();
+        // 2. 创建更多测试用户，保证商品/任务都能分布到不同账号
+        $users = User::factory(25)->create();
 
-        // 3. 让这些用户发布 50 个二手商品
-        Item::factory(50)
+        // 3. 让这些用户发布 160 个二手商品，覆盖更多关键词供搜索测试
+        Item::factory(160)
             ->recycle($users)
             ->create();
 
-        // 4. 让这些用户发布 20 个互助任务
-        Task::factory(20)
+        // 4. 让这些用户发布 80 个互助任务
+        Task::factory(80)
             ->recycle($users)
             ->create();
 
