@@ -78,8 +78,11 @@
             @forelse($items as $item)
                 @php
                     $delay = number_format(0.55 + $loop->index * 0.08, 2);
+                    // 检查是否是示例数据（普通对象）还是真实数据（Eloquent模型）
+                    $isSample = !($item instanceof \App\Models\Item);
+                    $itemUrl = $isSample ? '#' : route('items.show', $item);
                 @endphp
-                <a class="card-link anim-fade-up" style="--delay: {{ $delay }}s;" href="{{ route('items.show', $item) }}">
+                <a class="card-link anim-fade-up" style="--delay: {{ $delay }}s;@if($isSample) cursor: default; opacity: 0.8;@endif" href="{{ $itemUrl }}" @if($isSample) onclick="return false;" @endif>
                     <article class="card card--clickable card--product">
                         <div class="card__media">
                             <img src="https://picsum.photos/300/200?random={{ $item->id }}"
@@ -115,7 +118,12 @@
         </div>
         <div class="task-list">
             @forelse($tasks as $task)
-                <a href="{{ route('tasks.show', $task) }}" style="text-decoration:none;color:inherit;">
+                @php
+                    // 检查是否是示例数据（普通对象）还是真实数据（Eloquent模型）
+                    $isSample = !($task instanceof \App\Models\Task);
+                    $taskUrl = $isSample ? '#' : route('tasks.show', $task);
+                @endphp
+                <a href="{{ $taskUrl }}" style="text-decoration:none;color:inherit;@if($isSample) cursor: default; opacity: 0.8;@endif" @if($isSample) onclick="return false;" @endif>
                     <article class="task-card card--clickable">
                         <div class="task-card__avatar">
                             {{ mb_substr($task->user->name, 0, 1) }}
