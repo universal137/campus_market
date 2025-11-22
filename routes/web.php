@@ -25,3 +25,42 @@ Route::post('/items', [ItemController::class, 'store'])->name('items.store');
 Route::get('/tasks', [TaskController::class, 'index'])->name('tasks.index');
 Route::post('/tasks', [TaskController::class, 'store'])->name('tasks.store');
 Route::get('/tasks/{task}', [TaskController::class, 'show'])->name('tasks.show');
+
+// User routes
+Route::get('/user/profile', function () {
+    return view('user.profile');
+})->name('user.profile');
+
+Route::get('/user/published', function () {
+    return view('user.published');
+})->name('user.published');
+
+Route::get('/user/orders', function () {
+    return view('user.orders');
+})->name('user.orders');
+
+Route::get('/user/favorites', function () {
+    return view('user.favorites');
+})->name('user.favorites');
+
+Route::get('/user/notifications', function () {
+    return view('user.notifications');
+})->name('user.notifications');
+
+Route::get('/settings', function () {
+    return view('settings');
+})->name('settings');
+
+Route::get('/login', function () {
+    return view('auth.login');
+})->name('login');
+
+// Logout route
+Route::post('/logout', function () {
+    // In a real application, you would use Laravel's Auth facade
+    // Auth::logout();
+    // request()->session()->invalidate();
+    // request()->session()->regenerateToken();
+    
+    return response()->json(['message' => 'Logged out successfully'], 200);
+})->name('logout');

@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', '校园易 - 校园二手与互助平台')</title>
     <style>
         :root {
@@ -19,11 +20,20 @@
             display: none;
         }
         header.site-header {
+            position: sticky;
+            top: 0;
             display: flex;
             justify-content: center;
+            align-items: center;
             width: 100%;
-            background: transparent;
+            padding: 0 32px;
+            min-height: 80px;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
         }
         .site-header__inner {
             width: 100%;
@@ -94,6 +104,7 @@
         .user-identity {
             position: relative;
             flex-shrink: 0;
+            z-index: 1001;
         }
         .user-identity__guest {
             border: none;
@@ -149,20 +160,21 @@
             position: absolute;
             top: calc(100% + 14px);
             right: 0;
-            min-width: 220px;
+            min-width: 240px;
             border-radius: 20px;
-            padding: 12px;
-            background: rgba(255, 255, 255, 0.78);
-            backdrop-filter: blur(26px);
-            -webkit-backdrop-filter: blur(26px);
-            box-shadow: 0 30px 70px -35px rgba(15, 23, 42, 0.45);
-            border: 1px solid rgba(255, 255, 255, 0.5);
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            z-index: 1002;
         }
         .user-dropdown__item {
             width: 100%;
             border: none;
             background: transparent;
-            border-radius: 14px;
+            border-radius: 8px;
             padding: 10px 12px;
             display: flex;
             align-items: center;
@@ -171,12 +183,17 @@
             font-weight: 600;
             cursor: pointer;
             transition: background 0.2s ease, color 0.2s ease;
+            text-decoration: none;
         }
         .user-dropdown__item:hover,
         .user-dropdown__item:focus-visible {
-            background: rgba(15, 23, 42, 0.06);
-            color: #0f5af2;
+            background: #F5F5F7;
             outline: none;
+        }
+        .user-dropdown__item--logout:hover,
+        .user-dropdown__item--logout:focus-visible {
+            background: #F5F5F7;
+            color: #ef4444;
         }
         .user-dropdown__icon {
             width: 32px;
@@ -223,13 +240,14 @@
         }
         .user-dropdown-enter-active,
         .user-dropdown-leave-active {
-            transition: opacity 0.18s ease, transform 0.18s cubic-bezier(0.32, 0.72, 0, 1);
+            transition: opacity 0.2s cubic-bezier(0.32, 0.72, 0, 1),
+                        transform 0.2s cubic-bezier(0.32, 0.72, 0, 1);
             transform-origin: top right;
         }
         .user-dropdown-enter-from,
         .user-dropdown-leave-to {
             opacity: 0;
-            transform: translateY(-10px) scale(0.94);
+            transform: translateY(-10px) scale(0.95);
         }
         .user-dropdown-enter-to,
         .user-dropdown-leave-from {
@@ -279,7 +297,7 @@
         main {
             max-width: 1200px;
             margin: 0 auto 80px;
-            padding: 128px 24px 24px;
+            padding: 24px;
             position: relative;
             z-index: 0;
         }
@@ -764,8 +782,7 @@
 <body>
     <div id="layout-app" v-cloak>
     <header
-        class="site-header anim-fade-up fixed top-0 left-0 w-full z-[999] overflow-visible transition-all duration-300 ease-in-out flex items-center justify-between px-8"
-        :class="isScrolled ? 'bg-white/70 backdrop-blur-xl shadow-sm h-16' : 'bg-transparent h-24'"
+        class="site-header anim-fade-up overflow-visible transition-all duration-300 ease-in-out flex items-center justify-between px-8"
     >
         <div class="site-header__inner">
             <a href="{{ url('/') }}" class="site-header__logo">
@@ -795,7 +812,11 @@
                         <button type="button" class="user-identity__guest">登录 / 注册</button>
                     </template>
                     <template v-else>
-                        <div class="user-identity__auth" @mouseenter="openMenu" @mouseleave="closeMenu">
+                        <div 
+                            class="user-identity__auth"
+                            @mouseenter="openMenu"
+                            @mouseleave="closeMenu"
+                        >
                             <button
                                 type="button"
                                 class="user-identity__avatar-btn"
@@ -816,85 +837,45 @@
                             >
                                 <div
                                     v-if="menuOpen"
-                                    class="user-dropdown absolute top-full right-0 mt-2 z-[1000] bg-white/90 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl p-4 min-w-[240px] text-sm font-medium text-gray-700"
+                                    class="user-dropdown"
                                     role="menu"
+                                    @click.stop
+                                    @mouseenter="openMenu"
                                 >
-                                    <div class="pb-3 border-b border-white/40 text-gray-800">
+                                    <div 
+                                        class="pb-3 border-b border-white/40 text-gray-800 cursor-pointer user-dropdown__item"
+                                        @click="handleProfileClick"
+                                        role="menuitem"
+                                    >
                                         <p class="text-lg font-semibold">同学小明</p>
                                         <p class="mt-1 text-sm text-gray-500">信誉极好 · 已认证学生</p>
                                     </div>
                                     <div class="pt-3 space-y-2">
-                                        <div class="flex items-center gap-3 p-3 rounded-2xl cursor-pointer hover:bg-white/70 transition-colors" role="menuitem">
-                                            <span class="w-5 h-5 text-gray-500 flex items-center justify-center" aria-hidden="true">
-                                                <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5 min-w-[1.25rem]" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M4 4h11l5 5v11H4z"/>
-                                                    <path d="M9 9h4"/>
-                                                    <path d="M9 13h6"/>
-                                                </svg>
-                                            </span>
+                                        <div
+                                            v-for="item in mainMenuItems"
+                                            :key="item.id"
+                                            class="user-dropdown__item"
+                                            @click="handleMenuItemClick(item)"
+                                            role="menuitem"
+                                        >
+                                            <span class="w-5 h-5 text-gray-500 flex items-center justify-center" aria-hidden="true" v-html="item.icon"></span>
                                             <span class="flex-1">
-                                                <span class="text-sm font-medium text-gray-800 block">我发布的</span>
-                                                <span class="text-xs text-gray-500 block">管理闲置</span>
+                                                <span class="text-sm font-medium text-gray-800 block" v-text="item.label"></span>
+                                                <span v-if="item.description" class="text-xs text-gray-500 block" v-text="item.description"></span>
                                             </span>
-                                        </div>
-                                        <div class="flex items-center gap-3 p-3 rounded-2xl cursor-pointer hover:bg-white/70 transition-colors" role="menuitem">
-                                            <span class="w-5 h-5 text-gray-500 flex items-center justify-center" aria-hidden="true">
-                                                <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5 min-w-[1.25rem]" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M6 6h15l-1.5 9H7.5z"/>
-                                                    <path d="m6 6-2-3"/>
-                                                    <circle cx="9" cy="20" r="1"/>
-                                                    <circle cx="17" cy="20" r="1"/>
-                                                </svg>
-                                            </span>
-                                            <span class="flex-1">
-                                                <span class="text-sm font-medium text-gray-800 block">我买到的</span>
-                                                <span class="text-xs text-gray-500 block">查看交易记录</span>
-                                            </span>
-                                        </div>
-                                        <div class="flex items-center gap-3 p-3 rounded-2xl cursor-pointer hover:bg-white/70 transition-colors" role="menuitem">
-                                            <span class="w-5 h-5 text-gray-500 flex items-center justify-center" aria-hidden="true">
-                                                <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5 min-w-[1.25rem]" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M19 14c0 4-7 7-7 7s-7-3-7-7a4 4 0 0 1 4-4c1.2 0 2.4.8 3 2 .6-1.2 1.8-2 3-2a4 4 0 0 1 4 4Z"/>
-                                                </svg>
-                                            </span>
-                                            <span class="flex-1">
-                                                <span class="text-sm font-medium text-gray-800 block">我的收藏</span>
-                                                <span class="text-xs text-gray-500 block">收藏夹</span>
-                                            </span>
-                                        </div>
-                                        <div class="flex items-center gap-3 p-3 rounded-2xl cursor-pointer hover:bg-white/70 transition-colors" role="menuitem">
-                                            <span class="w-5 h-5 text-gray-500 flex items-center justify-center" aria-hidden="true">
-                                                <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5 min-w-[1.25rem]" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M18 16v-5a6 6 0 1 0-12 0v5l-1.5 3h15z"/>
-                                                    <path d="M10 20a2 2 0 0 0 4 0"/>
-                                                </svg>
-                                            </span>
-                                            <span class="flex-1">
-                                                <span class="text-sm font-medium text-gray-800 block">消息通知</span>
-                                                <span class="text-xs text-gray-500 block">未读提醒</span>
-                                            </span>
-                                            <span class="ml-auto w-2 h-2 rounded-full bg-red-500"></span>
+                                            <span v-if="item.badge" class="ml-auto w-2 h-2 rounded-full bg-red-500"></span>
                                         </div>
                                     </div>
                                     <div class="mt-3 border-t border-white/30 pt-3 space-y-2">
-                                        <div class="flex items-center gap-3 p-3 rounded-2xl cursor-pointer hover:bg-white/70 transition-colors" role="menuitem">
-                                            <span class="w-5 h-5 text-gray-500 flex items-center justify-center" aria-hidden="true">
-                                                <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5 min-w-[1.25rem]" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                                                    <circle cx="12" cy="12" r="3"/>
-                                                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c0 .69.4 1.31 1.02 1.58.96.42 1.62 1.37 1.62 2.42s-.66 2-1.62 2.42A1.65 1.65 0 0 0 19.4 15Z"/>
-                                                </svg>
-                                            </span>
-                                            <span class="flex-1 text-sm font-medium text-gray-800">设置</span>
-                                        </div>
-                                        <div class="flex items-center gap-3 p-3 rounded-2xl cursor-pointer hover:bg-red-50 transition-colors text-gray-700 hover:text-red-500" role="menuitem">
-                                            <span class="w-5 h-5 text-gray-500 flex items-center justify-center" aria-hidden="true">
-                                                <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5 min-w-[1.25rem]" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                                                    <polyline points="16 17 21 12 16 7"/>
-                                                    <line x1="21" y1="12" x2="9" y2="12"/>
-                                                </svg>
-                                            </span>
-                                            <span class="flex-1 text-sm font-medium">退出登录</span>
+                                        <div
+                                            v-for="item in bottomMenuItems"
+                                            :key="item.id"
+                                            :class="['user-dropdown__item', item.isLogout ? 'user-dropdown__item--logout' : '']"
+                                            @click="handleMenuItemClick(item)"
+                                            role="menuitem"
+                                        >
+                                            <span class="w-5 h-5 text-gray-500 flex items-center justify-center" aria-hidden="true" v-html="item.icon"></span>
+                                            <span class="flex-1 text-sm font-medium" :class="item.isLogout ? 'text-gray-700' : 'text-gray-800'" v-text="item.label"></span>
                                         </div>
                                     </div>
                                 </div>
@@ -906,7 +887,7 @@
         </div>
     </header>
 
-    <main class="pt-32 relative z-0">
+    <main class="relative z-0">
         @yield('content')
     </main>
 
@@ -927,8 +908,113 @@
                 setup() {
                     const isLoggedIn = ref(true);
                     const menuOpen = ref(false);
-                    const isScrolled = ref(false);
                     const userIdentityEl = ref(null);
+
+                    // Menu Items Data Structure
+                    const mainMenuItems = ref([
+                        {
+                            id: 'published',
+                            label: '我发布的',
+                            description: '管理闲置',
+                            action: '/user/published',
+                            icon: '<svg viewBox="0 0 24 24" fill="none" class="w-5 h-5 min-w-[1.25rem]" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11l5 5v11H4z"/><path d="M9 9h4"/><path d="M9 13h6"/></svg>'
+                        },
+                        {
+                            id: 'orders',
+                            label: '我买到的',
+                            description: '查看交易记录',
+                            action: '/user/orders',
+                            icon: '<svg viewBox="0 0 24 24" fill="none" class="w-5 h-5 min-w-[1.25rem]" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6h15l-1.5 9H7.5z"/><path d="m6 6-2-3"/><circle cx="9" cy="20" r="1"/><circle cx="17" cy="20" r="1"/></svg>'
+                        },
+                        {
+                            id: 'favorites',
+                            label: '我的收藏',
+                            description: '收藏夹',
+                            action: '/user/favorites',
+                            icon: '<svg viewBox="0 0 24 24" fill="none" class="w-5 h-5 min-w-[1.25rem]" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c0 4-7 7-7 7s-7-3-7-7a4 4 0 0 1 4-4c1.2 0 2.4.8 3 2 .6-1.2 1.8-2 3-2a4 4 0 0 1 4 4Z"/></svg>'
+                        },
+                        {
+                            id: 'notifications',
+                            label: '消息通知',
+                            description: '未读提醒',
+                            action: '/user/notifications',
+                            icon: '<svg viewBox="0 0 24 24" fill="none" class="w-5 h-5 min-w-[1.25rem]" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 16v-5a6 6 0 1 0-12 0v5l-1.5 3h15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>',
+                            badge: true
+                        }
+                    ]);
+
+                    const bottomMenuItems = ref([
+                        {
+                            id: 'settings',
+                            label: '设置',
+                            action: '/settings',
+                            icon: '<svg viewBox="0 0 24 24" fill="none" class="w-5 h-5 min-w-[1.25rem]" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c0 .69.4 1.31 1.02 1.58.96.42 1.62 1.37 1.62 2.42s-.66 2-1.62 2.42A1.65 1.65 0 0 0 19.4 15Z"/></svg>',
+                            isLogout: false
+                        },
+                        {
+                            id: 'logout',
+                            label: '退出登录',
+                            action: 'logout',
+                            icon: '<svg viewBox="0 0 24 24" fill="none" class="w-5 h-5 min-w-[1.25rem]" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
+                            isLogout: true
+                        }
+                    ]);
+
+                    // Navigation Handlers
+                    const handleMenuItemClick = (item) => {
+                        if (item.isLogout) {
+                            handleLogout();
+                        } else if (typeof item.action === 'function') {
+                            item.action();
+                        } else if (item.action) {
+                            window.location.href = item.action;
+                        }
+                        closeMenu();
+                    };
+
+                    const handleProfileClick = () => {
+                        window.location.href = '/user/profile';
+                        closeMenu();
+                    };
+
+                    // Logout Handler
+                    const handleLogout = async () => {
+                        try {
+                            // Call logout API
+                            const response = await fetch('/logout', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                                },
+                                credentials: 'same-origin'
+                            });
+
+                            // Clear local storage
+                            localStorage.clear();
+                            sessionStorage.clear();
+
+                            // Clear cookies (if any)
+                            document.cookie.split(";").forEach((c) => {
+                                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+                            });
+
+                            // Show success message (you can replace this with a toast library)
+                            if (response.ok || response.status === 302 || response.status === 200) {
+                                // Redirect to login page
+                                window.location.href = '/login';
+                            } else {
+                                // Even if API fails, still redirect (for demo purposes)
+                                window.location.href = '/login';
+                            }
+                        } catch (error) {
+                            console.error('Logout error:', error);
+                            // Even on error, clear storage and redirect
+                            localStorage.clear();
+                            sessionStorage.clear();
+                            window.location.href = '/login';
+                        }
+                    };
 
                     const openMenu = () => {
                         menuOpen.value = true;
@@ -942,38 +1028,26 @@
                         menuOpen.value = !menuOpen.value;
                     };
 
-                    const handleOutsideClick = (event) => {
-                        if (!userIdentityEl.value) {
-                            return;
-                        }
-                        if (!userIdentityEl.value.contains(event.target)) {
-                            menuOpen.value = false;
-                        }
-                    };
-
-                    const handleScroll = () => {
-                        isScrolled.value = window.scrollY > 0;
-                    };
-
                     onMounted(() => {
-                        document.addEventListener('click', handleOutsideClick);
-                        window.addEventListener('scroll', handleScroll, { passive: true });
-                        handleScroll();
+                        // Scroll handling removed as navbar is now always sticky with glassmorphism
                     });
 
                     onUnmounted(() => {
-                        document.removeEventListener('click', handleOutsideClick);
-                        window.removeEventListener('scroll', handleScroll);
+                        // Cleanup if needed
                     });
 
                     return {
                         isLoggedIn,
                         menuOpen,
-                        isScrolled,
                         userIdentityEl,
+                        mainMenuItems,
+                        bottomMenuItems,
                         openMenu,
                         closeMenu,
-                        toggleMenu
+                        toggleMenu,
+                        handleMenuItemClick,
+                        handleProfileClick,
+                        handleLogout
                     };
                 }
             }).mount('#layout-app');
