@@ -23,4 +23,20 @@ class Item extends Model
     {
         return $this->belongsTo(Category::class);
     }
+
+    /**
+     * Get the users who have wishlisted this item.
+     */
+    public function wishlistedBy()
+    {
+        return $this->belongsToMany(User::class, 'wishlists')->withTimestamps();
+    }
+
+    /**
+     * Check if the item is liked by a specific user.
+     */
+    public function isLikedBy(User $user): bool
+    {
+        return $this->wishlistedBy()->where('user_id', $user->id)->exists();
+    }
 }

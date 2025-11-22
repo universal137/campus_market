@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\WishlistController;
 
 Route::get('/', function () {
     // 获取所有分类
@@ -120,6 +121,11 @@ Route::middleware('auth')->group(function () {
     })->name('user.profile');
     
     Route::put('/user/profile', [AuthController::class, 'updateProfile'])->name('user.profile.update');
+    
+    // Wishlist routes
+    Route::get('/user/wishlist', [\App\Http\Controllers\UserController::class, 'wishlist'])->name('user.wishlist');
+    Route::post('/wishlist/{id}', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
+    Route::post('/wishlist/task/{id}', [WishlistController::class, 'toggleTask'])->name('wishlist.task.toggle');
 });
 
 Route::get('/user/published', function () {

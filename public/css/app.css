@@ -202,6 +202,34 @@ header.site-header {
     color: #ef4444;
 }
 
+.user-dropdown__profile-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.user-dropdown__profile-link:hover {
+    text-decoration: none;
+}
+
+.user-dropdown__profile-link > div {
+    background: transparent;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.user-dropdown__profile-link:hover > div {
+    background: #F5F5F7;
+    transform: translateX(4px);
+}
+
+.user-dropdown__profile-link:hover svg {
+    transform: translateX(2px);
+    opacity: 1;
+}
+
 /* Main Content */
 main {
     max-width: 1200px;

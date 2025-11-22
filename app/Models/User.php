@@ -21,9 +21,13 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'student_id', // 新增
-        'phone',      // 新增
-        'avatar',     // 新增
+        'student_id',
+        'phone',
+        'avatar',
+        'school',
+        'major',
+        'enrollment_year',
+        'bio',
     ];
 
     /**
@@ -47,5 +51,21 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Get the items that the user has wishlisted.
+     */
+    public function wishlist()
+    {
+        return $this->belongsToMany(Item::class, 'wishlists')->withTimestamps();
+    }
+
+    /**
+     * Get the tasks that the user has wishlisted.
+     */
+    public function wishlistTasks()
+    {
+        return $this->belongsToMany(Task::class, 'task_user')->withTimestamps();
     }
 }

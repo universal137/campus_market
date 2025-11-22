@@ -6,6 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', '校园易 - 校园二手与互助平台')</title>
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <script src="https://cdn.tailwindcss.com"></script>
     @stack('head')
 </head>
 <body class="bg-gray-100">
@@ -39,16 +40,40 @@
                                 @endif
                             </button>
                             <div class="user-dropdown" id="user-dropdown" style="display: none;">
-                                <div class="pb-3 border-b border-white/40 text-gray-800 cursor-pointer user-dropdown__item">
-                                    <p class="text-lg font-semibold">{{ auth()->user()->name }}</p>
-                                    <p class="mt-1 text-sm text-gray-500">
-                                        @if(auth()->user()->student_id)
-                                            学号：{{ auth()->user()->student_id }} · 已认证学生
-                                        @else
-                                            信誉极好 · 已认证学生
-                                        @endif
-                                    </p>
-                                </div>
+                                <a href="{{ route('user.profile') }}" class="user-dropdown__profile-link">
+                                    <div style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px; transition: all 0.2s ease;">
+                                        <div style="flex-shrink: 0;">
+                                            @if(auth()->user()->avatar)
+                                                <img src="{{ asset('storage/' . auth()->user()->avatar) }}" alt="{{ auth()->user()->name }}" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.2);">
+                                            @else
+                                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed={{ urlencode(auth()->user()->name) }}" alt="{{ auth()->user()->name }}" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.2);">
+                                            @endif
+                                        </div>
+                                        <div style="flex: 1; min-width: 0;">
+                                            <p style="margin: 0; font-size: 16px; font-weight: 600; color: #0f172a; display: flex; align-items: center; gap: 6px;">
+                                                {{ auth()->user()->name }}
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.5; transition: transform 0.2s ease;">
+                                                    <polyline points="9 18 15 12 9 6"/>
+                                                </svg>
+                                            </p>
+                                            <p style="margin: 4px 0 0; font-size: 13px; color: #64748b; display: flex; align-items: center; gap: 6px;">
+                                                @if(auth()->user()->student_id)
+                                                    <span style="display: inline-flex; align-items: center; gap: 4px; background: #dcfce7; color: #166534; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600;">
+                                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                                            <polyline points="22 4 12 14.01 9 11.01"/>
+                                                        </svg>
+                                                        已认证学生
+                                                    </span>
+                                                @else
+                                                    <span style="display: inline-flex; align-items: center; gap: 4px; background: #fef3c7; color: #92400e; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600;">
+                                                        待认证
+                                                    </span>
+                                                @endif
+                                            </p>
+                                        </div>
+                                    </div>
+                                </a>
                                 <div class="pt-3 space-y-2">
                                     <a href="/user/published" class="user-dropdown__item">
                                         <span class="w-5 h-5 text-gray-500 flex items-center justify-center">

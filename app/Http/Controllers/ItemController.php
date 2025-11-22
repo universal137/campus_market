@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Item;
 use App\Models\User;
+use Database\Factories\ItemFactory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -31,7 +32,7 @@ class ItemController extends Controller
             });
         }
 
-        $items = $query->paginate(9)->withQueryString();
+        $items = $query->paginate(12)->withQueryString();
 
         return view('items.index', [
             'items' => $items,
@@ -79,6 +80,7 @@ class ItemController extends Controller
             'description' => $validated['description'],
             'price' => $validated['price'],
             'deal_place' => $validated['deal_place'] ?? null,
+            'image' => ItemFactory::getRandomImageUrl(),
             'status' => 'on_sale',
         ]);
 

@@ -120,17 +120,47 @@ class AuthController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'bio' => ['nullable', 'string', 'max:500'],
             'phone' => ['nullable', 'string', 'max:20'],
+            'school' => ['nullable', 'string', 'max:255'],
+            'major' => ['nullable', 'string', 'max:255'],
+            'student_id' => ['nullable', 'string', 'max:50', 'unique:users,student_id,' . $user->id],
+            'enrollment_year' => ['nullable', 'integer', 'min:1900', 'max:' . (date('Y') + 10)],
         ], [
             'name.required' => '请输入昵称',
             'name.max' => '昵称不能超过255个字符',
+            'bio.max' => '个人简介不能超过500个字符',
             'phone.max' => '联系方式不能超过20个字符',
+            'school.max' => '学校名称不能超过255个字符',
+            'major.max' => '专业名称不能超过255个字符',
+            'student_id.unique' => '该学号已被使用',
+            'student_id.max' => '学号不能超过50个字符',
+            'enrollment_year.integer' => '入学年份必须是数字',
+            'enrollment_year.min' => '入学年份无效',
+            'enrollment_year.max' => '入学年份无效',
         ]);
 
-        $user->update([
+        // 如果学号已存在且已验证，不允许修改
+        if ($user->student_id && $user->student_id !== ($validated['student_id'] ?? null)) {
+            return redirect()->route('user.profile')
+                ->withErrors(['student_id' => '已认证的学号不可修改，如需修改请联系管理员'])
+                ->withInput();
+        }
+
+        // 准备更新数据
+        $updateData = [
             'name' => $validated['name'],
-            'phone' => $validated['phone'] ?? $user->phone,
-        ]);
+            'bio' => $validated['bio'] ?? null,
+            'phone' => $validated['phone'] ?? null,
+            'school' => $validated['school'] ?? null,
+            'major' => $validated['major'] ?? null,
+            'enrollment_year' => $validated['enrollment_year'] ?? null,
+        ];
+
+        // 学号：如果已存在则保持不变，否则使用新提交的值
+        $updateData['student_id'] = $user->student_id ?? ($validated['student_id'] ?? null);
+
+        $user->update($updateData);
 
         return redirect()->route('user.profile')->with('success', '资料更新成功！');
     }
