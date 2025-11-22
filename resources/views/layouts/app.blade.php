@@ -15,15 +15,14 @@
             color: #1d1d1f;
             font-weight: 500;
         }
+        [v-cloak] {
+            display: none;
+        }
         header.site-header {
-            position: sticky;
-            top: 0;
             display: flex;
             justify-content: center;
             width: 100%;
             background: transparent;
-            padding: 0 40px;
-            height: 120px;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .site-header__inner {
@@ -33,6 +32,14 @@
             align-items: center;
             justify-content: space-between;
             gap: 24px;
+        }
+        .site-header__actions {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+        .site-header__actions .telemetry-pill {
+            margin-right: 6px;
         }
         .site-header__logo {
             font-size: 2.5rem;
@@ -78,24 +85,156 @@
             background: rgba(255, 255, 255, 0.9);
             border-color: rgba(0, 0, 0, 0.25);
         }
-        header.site-header.is-scrolled {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 50;
-            height: 70px;
-            padding: 0 28px;
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-        }
-        header.site-header.is-scrolled .site-header__logo {
-            font-size: 1.5rem;
+        header.site-header .site-header__logo {
+            transition: inherit;
         }
         .site-header__weather {
             flex-shrink: 0;
+        }
+        .user-identity {
+            position: relative;
+            flex-shrink: 0;
+        }
+        .user-identity__guest {
+            border: none;
+            border-radius: 999px;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            background: #111;
+            color: white;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.2s ease;
+            box-shadow: 0 20px 40px -22px rgba(0, 0, 0, 0.45);
+        }
+        .user-identity__guest:hover,
+        .user-identity__guest:focus-visible {
+            background: #1f1f1f;
+            transform: translateY(-1px) scale(1.01);
+            outline: none;
+        }
+        .user-identity__auth {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .user-identity__avatar-btn {
+            border: none;
+            background: transparent;
+            padding: 0;
+            cursor: pointer;
+            border-radius: 999px;
+            width: 48px;
+            height: 48px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 18px 42px -25px rgba(15, 23, 42, 0.75);
+            transition: transform 0.25s ease;
+        }
+        .user-identity__avatar-btn:focus-visible {
+            outline: 2px solid rgba(15, 23, 42, 0.25);
+            outline-offset: 4px;
+        }
+        .user-identity__avatar-btn:hover {
+            transform: translateY(-2px) scale(1.03);
+        }
+        .user-identity__avatar-btn img {
+            width: 40px;
+            height: 40px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+        .user-dropdown {
+            position: absolute;
+            top: calc(100% + 14px);
+            right: 0;
+            min-width: 220px;
+            border-radius: 20px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.78);
+            backdrop-filter: blur(26px);
+            -webkit-backdrop-filter: blur(26px);
+            box-shadow: 0 30px 70px -35px rgba(15, 23, 42, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+        .user-dropdown__item {
+            width: 100%;
+            border: none;
+            background: transparent;
+            border-radius: 14px;
+            padding: 10px 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #0f172a;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease, color 0.2s ease;
+        }
+        .user-dropdown__item:hover,
+        .user-dropdown__item:focus-visible {
+            background: rgba(15, 23, 42, 0.06);
+            color: #0f5af2;
+            outline: none;
+        }
+        .user-dropdown__icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.08);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .user-dropdown svg {
+            width: 1.25rem;
+            height: 1.25rem;
+            min-width: 1.25rem;
+        }
+        .w-5 {
+            width: 1.25rem !important;
+        }
+        .h-5 {
+            height: 1.25rem !important;
+        }
+        .min-w-\[1\.25rem\] {
+            min-width: 1.25rem !important;
+        }
+        .user-dropdown__icon svg {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+        }
+        .user-dropdown__label {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .user-dropdown__badge {
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background: #ef4444;
+            display: inline-block;
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.8);
+        }
+        .user-dropdown-enter-active,
+        .user-dropdown-leave-active {
+            transition: opacity 0.18s ease, transform 0.18s cubic-bezier(0.32, 0.72, 0, 1);
+            transform-origin: top right;
+        }
+        .user-dropdown-enter-from,
+        .user-dropdown-leave-to {
+            opacity: 0;
+            transform: translateY(-10px) scale(0.94);
+        }
+        .user-dropdown-enter-to,
+        .user-dropdown-leave-from {
+            opacity: 1;
+            transform: translateY(0) scale(1);
         }
         .telemetry-pill {
             display: flex;
@@ -140,7 +279,9 @@
         main {
             max-width: 1200px;
             margin: 0 auto 80px;
-            padding: 0 24px 24px;
+            padding: 128px 24px 24px;
+            position: relative;
+            z-index: 0;
         }
         .surface {
             background: #fff;
@@ -605,10 +746,7 @@
                 height: 52px;
             }
             header.site-header {
-                height: 100px;
-            }
-            header.site-header.is-scrolled {
-                height: 64px;
+                height: auto;
             }
             .site-header__logo {
                 font-size: 2rem;
@@ -624,7 +762,11 @@
     @stack('head')
 </head>
 <body>
-    <header class="site-header anim-fade-up">
+    <div id="layout-app" v-cloak>
+    <header
+        class="site-header anim-fade-up fixed top-0 left-0 w-full z-[999] overflow-visible transition-all duration-300 ease-in-out flex items-center justify-between px-8"
+        :class="isScrolled ? 'bg-white/70 backdrop-blur-xl shadow-sm h-16' : 'bg-transparent h-24'"
+    >
         <div class="site-header__inner">
             <a href="{{ url('/') }}" class="site-header__logo">
                 校园易
@@ -635,43 +777,206 @@
                 <a href="{{ route('items.index') }}">二手</a>
                 <a href="{{ route('tasks.index') }}">互助</a>
             </nav>
-            <div class="telemetry-pill site-header__weather">
-                <div class="telemetry-pill__icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="5"/>
-                        <path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42"/>
-                    </svg>
+            <div class="site-header__actions">
+                <div class="telemetry-pill site-header__weather">
+                    <div class="telemetry-pill__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="5"/>
+                            <path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42"/>
+                        </svg>
+                    </div>
+                    <div class="telemetry-pill__meta">
+                        <span class="telemetry-pill__temp">23°C · 晴</span>
+                        <span class="telemetry-pill__date">11月21日 周五 · 校园微风 2 级</span>
+                    </div>
                 </div>
-                <div class="telemetry-pill__meta">
-                    <span class="telemetry-pill__temp">23°C · 晴</span>
-                    <span class="telemetry-pill__date">11月21日 周五 · 校园微风 2 级</span>
+                <div id="user-identity" class="user-identity" ref="userIdentityEl">
+                    <template v-if="!isLoggedIn">
+                        <button type="button" class="user-identity__guest">登录 / 注册</button>
+                    </template>
+                    <template v-else>
+                        <div class="user-identity__auth" @mouseenter="openMenu" @mouseleave="closeMenu">
+                            <button
+                                type="button"
+                                class="user-identity__avatar-btn"
+                                @click.stop="toggleMenu"
+                                :aria-expanded="menuOpen ? 'true' : 'false'"
+                                aria-haspopup="true"
+                                aria-label="打开用户菜单"
+                            >
+                                <img src="https://i.pravatar.cc/150?img=3" alt="用户头像">
+                            </button>
+                            <Transition
+                                enter-active-class="user-dropdown-enter-active"
+                                leave-active-class="user-dropdown-leave-active"
+                                enter-from-class="user-dropdown-enter-from"
+                                enter-to-class="user-dropdown-enter-to"
+                                leave-from-class="user-dropdown-enter-to"
+                                leave-to-class="user-dropdown-enter-from"
+                            >
+                                <div
+                                    v-if="menuOpen"
+                                    class="user-dropdown absolute top-full right-0 mt-2 z-[1000] bg-white/90 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl p-4 min-w-[240px] text-sm font-medium text-gray-700"
+                                    role="menu"
+                                >
+                                    <div class="pb-3 border-b border-white/40 text-gray-800">
+                                        <p class="text-lg font-semibold">同学小明</p>
+                                        <p class="mt-1 text-sm text-gray-500">信誉极好 · 已认证学生</p>
+                                    </div>
+                                    <div class="pt-3 space-y-2">
+                                        <div class="flex items-center gap-3 p-3 rounded-2xl cursor-pointer hover:bg-white/70 transition-colors" role="menuitem">
+                                            <span class="w-5 h-5 text-gray-500 flex items-center justify-center" aria-hidden="true">
+                                                <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5 min-w-[1.25rem]" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M4 4h11l5 5v11H4z"/>
+                                                    <path d="M9 9h4"/>
+                                                    <path d="M9 13h6"/>
+                                                </svg>
+                                            </span>
+                                            <span class="flex-1">
+                                                <span class="text-sm font-medium text-gray-800 block">我发布的</span>
+                                                <span class="text-xs text-gray-500 block">管理闲置</span>
+                                            </span>
+                                        </div>
+                                        <div class="flex items-center gap-3 p-3 rounded-2xl cursor-pointer hover:bg-white/70 transition-colors" role="menuitem">
+                                            <span class="w-5 h-5 text-gray-500 flex items-center justify-center" aria-hidden="true">
+                                                <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5 min-w-[1.25rem]" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M6 6h15l-1.5 9H7.5z"/>
+                                                    <path d="m6 6-2-3"/>
+                                                    <circle cx="9" cy="20" r="1"/>
+                                                    <circle cx="17" cy="20" r="1"/>
+                                                </svg>
+                                            </span>
+                                            <span class="flex-1">
+                                                <span class="text-sm font-medium text-gray-800 block">我买到的</span>
+                                                <span class="text-xs text-gray-500 block">查看交易记录</span>
+                                            </span>
+                                        </div>
+                                        <div class="flex items-center gap-3 p-3 rounded-2xl cursor-pointer hover:bg-white/70 transition-colors" role="menuitem">
+                                            <span class="w-5 h-5 text-gray-500 flex items-center justify-center" aria-hidden="true">
+                                                <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5 min-w-[1.25rem]" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M19 14c0 4-7 7-7 7s-7-3-7-7a4 4 0 0 1 4-4c1.2 0 2.4.8 3 2 .6-1.2 1.8-2 3-2a4 4 0 0 1 4 4Z"/>
+                                                </svg>
+                                            </span>
+                                            <span class="flex-1">
+                                                <span class="text-sm font-medium text-gray-800 block">我的收藏</span>
+                                                <span class="text-xs text-gray-500 block">收藏夹</span>
+                                            </span>
+                                        </div>
+                                        <div class="flex items-center gap-3 p-3 rounded-2xl cursor-pointer hover:bg-white/70 transition-colors" role="menuitem">
+                                            <span class="w-5 h-5 text-gray-500 flex items-center justify-center" aria-hidden="true">
+                                                <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5 min-w-[1.25rem]" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M18 16v-5a6 6 0 1 0-12 0v5l-1.5 3h15z"/>
+                                                    <path d="M10 20a2 2 0 0 0 4 0"/>
+                                                </svg>
+                                            </span>
+                                            <span class="flex-1">
+                                                <span class="text-sm font-medium text-gray-800 block">消息通知</span>
+                                                <span class="text-xs text-gray-500 block">未读提醒</span>
+                                            </span>
+                                            <span class="ml-auto w-2 h-2 rounded-full bg-red-500"></span>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3 border-t border-white/30 pt-3 space-y-2">
+                                        <div class="flex items-center gap-3 p-3 rounded-2xl cursor-pointer hover:bg-white/70 transition-colors" role="menuitem">
+                                            <span class="w-5 h-5 text-gray-500 flex items-center justify-center" aria-hidden="true">
+                                                <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5 min-w-[1.25rem]" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                                                    <circle cx="12" cy="12" r="3"/>
+                                                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c0 .69.4 1.31 1.02 1.58.96.42 1.62 1.37 1.62 2.42s-.66 2-1.62 2.42A1.65 1.65 0 0 0 19.4 15Z"/>
+                                                </svg>
+                                            </span>
+                                            <span class="flex-1 text-sm font-medium text-gray-800">设置</span>
+                                        </div>
+                                        <div class="flex items-center gap-3 p-3 rounded-2xl cursor-pointer hover:bg-red-50 transition-colors text-gray-700 hover:text-red-500" role="menuitem">
+                                            <span class="w-5 h-5 text-gray-500 flex items-center justify-center" aria-hidden="true">
+                                                <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5 min-w-[1.25rem]" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                                                    <polyline points="16 17 21 12 16 7"/>
+                                                    <line x1="21" y1="12" x2="9" y2="12"/>
+                                                </svg>
+                                            </span>
+                                            <span class="flex-1 text-sm font-medium">退出登录</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </Transition>
+                        </div>
+                    </template>
                 </div>
             </div>
         </div>
     </header>
 
-    <main>
+    <main class="pt-32 relative z-0">
         @yield('content')
     </main>
 
     <footer>
         © {{ date('Y') }} 校园易 · 校园二手与互助平台（演示版）
     </footer>
+    </div>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            var header = document.querySelector('.site-header');
-            if (!header) return;
+            if (!window.Vue) {
+                return;
+            }
 
-            var toggleScrolled = function () {
-                if (window.scrollY > 50) {
-                    header.classList.add('is-scrolled');
-                } else {
-                    header.classList.remove('is-scrolled');
+            const { createApp, ref, onMounted, onUnmounted } = Vue;
+
+            createApp({
+                setup() {
+                    const isLoggedIn = ref(true);
+                    const menuOpen = ref(false);
+                    const isScrolled = ref(false);
+                    const userIdentityEl = ref(null);
+
+                    const openMenu = () => {
+                        menuOpen.value = true;
+                    };
+
+                    const closeMenu = () => {
+                        menuOpen.value = false;
+                    };
+
+                    const toggleMenu = () => {
+                        menuOpen.value = !menuOpen.value;
+                    };
+
+                    const handleOutsideClick = (event) => {
+                        if (!userIdentityEl.value) {
+                            return;
+                        }
+                        if (!userIdentityEl.value.contains(event.target)) {
+                            menuOpen.value = false;
+                        }
+                    };
+
+                    const handleScroll = () => {
+                        isScrolled.value = window.scrollY > 0;
+                    };
+
+                    onMounted(() => {
+                        document.addEventListener('click', handleOutsideClick);
+                        window.addEventListener('scroll', handleScroll, { passive: true });
+                        handleScroll();
+                    });
+
+                    onUnmounted(() => {
+                        document.removeEventListener('click', handleOutsideClick);
+                        window.removeEventListener('scroll', handleScroll);
+                    });
+
+                    return {
+                        isLoggedIn,
+                        menuOpen,
+                        isScrolled,
+                        userIdentityEl,
+                        openMenu,
+                        closeMenu,
+                        toggleMenu
+                    };
                 }
-            };
-
-            toggleScrolled();
-            window.addEventListener('scroll', toggleScrolled, { passive: true });
+            }).mount('#layout-app');
         });
     </script>
 </body>

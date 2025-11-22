@@ -2,41 +2,123 @@
 
 本项目以 “校园二手交易与互助平台” 课程题目为核心，基于 Laravel 11 + MySQL 搭建，提供闲置物品发布、互助任务发布与展示的最小可运行版本，方便通过 `php artisan serve` 直接体验。
 
+### 环境要求
+
+- PHP >= 8.2
+- Composer
+- MySQL >= 5.7 或 MariaDB >= 10.3
+- Node.js >= 18 和 npm（用于前端资源编译）
+
 ### 快速开始
 
-1. **复制 `.env.example` 并配置数据库**
-   ```bash
-   cp .env.example .env
-   ```
-   在 `.env` 中设置：
-   ```
-   DB_CONNECTION=mysql
-   DB_HOST=127.0.0.1
-   DB_PORT=3306
-   DB_DATABASE=campus_market
-   DB_USERNAME=root
-   DB_PASSWORD=你的密码
+#### 1. 克隆项目并安装依赖
 
-   SESSION_DRIVER=database
-   ```
+```bash
+git clone <项目地址>
+cd finalprojects
+composer install
+npm install
+```
 
-2. **安装依赖并生成密钥**
-   ```bash
-   composer install
-   php artisan key:generate
-   ```
+#### 2. 配置环境变量
 
-3. **迁移 + 填充演示数据**
-   ```bash
-   php artisan migrate
-   php artisan db:seed
-   ```
+**Windows (PowerShell):**
+```powershell
+Copy-Item .env.example .env
+```
 
-4. **运行项目**
-   ```bash
-   php artisan serve
-   ```
-   浏览器访问 http://127.0.0.1:8000 即可看到概览页，顶部导航可进入 “二手交易” 与 “互助任务” 页面，支持筛选、简单发布表单（未开启正式登录，仅用于演示流程）。
+**Linux/Mac:**
+```bash
+cp .env.example .env
+```
+
+#### 3. 创建数据库
+
+在 MySQL 中创建数据库：
+
+```sql
+CREATE DATABASE campus_market CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+或者使用命令行：
+
+```bash
+mysql -u root -p -e "CREATE DATABASE campus_market CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+```
+
+#### 4. 配置数据库连接
+
+编辑 `.env` 文件，设置数据库信息：
+
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=campus_market
+DB_USERNAME=root
+DB_PASSWORD=你的MySQL密码
+
+SESSION_DRIVER=database
+```
+
+**注意：** 如果使用 SQLite（仅用于开发测试），可以设置：
+```env
+DB_CONNECTION=sqlite
+DB_DATABASE=database/database.sqlite
+```
+然后需要创建 SQLite 文件：
+```bash
+touch database/database.sqlite  # Linux/Mac
+# 或手动创建 database/database.sqlite 文件 (Windows)
+```
+
+#### 5. 生成应用密钥
+
+```bash
+php artisan key:generate
+```
+
+#### 6. 运行数据库迁移和填充数据
+
+```bash
+php artisan migrate
+php artisan db:seed
+```
+
+这将创建所有必要的数据库表并填充示例数据。
+
+#### 7. 编译前端资源
+
+```bash
+npm run build
+```
+
+开发时可以使用：
+```bash
+npm run dev
+```
+
+#### 8. 启动开发服务器
+
+```bash
+php artisan serve
+```
+
+浏览器访问 **http://127.0.0.1:8000** 即可看到概览页，顶部导航可进入 "二手交易" 与 "互助任务" 页面，支持筛选、简单发布表单（未开启正式登录，仅用于演示流程）。
+
+### 常见问题
+
+**Q: 迁移时提示数据库连接失败？**  
+A: 检查 `.env` 文件中的数据库配置是否正确，确保 MySQL 服务已启动，数据库已创建。
+
+**Q: 提示 `APP_KEY` 未设置？**  
+A: 运行 `php artisan key:generate` 生成应用密钥。
+
+**Q: 前端样式未加载？**  
+A: 确保已运行 `npm install` 和 `npm run build`，或使用 `npm run dev` 启动开发模式。
+
+**Q: 会话不工作？**  
+A: 确保 `SESSION_DRIVER=database` 且已运行迁移（会创建 `sessions` 表）。
 
 ### 功能概览
 
