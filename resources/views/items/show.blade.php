@@ -68,10 +68,10 @@
                 <!-- 底部操作栏（可做成悬浮） -->
                 <div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:10px;">
                     <button type="button" class="btn btn-primary" style="flex:1 1 160px;min-width:140px;">
-                        我想要 / 立即沟通（占位）
+                        我想要购买
                     </button>
                     <button type="button" class="btn btn-secondary" style="flex:1 1 130px;min-width:120px;">
-                        加入心愿单（占位）
+                        加入心愿单
                     </button>
                 </div>
             </div>
