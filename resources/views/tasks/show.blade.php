@@ -55,9 +55,40 @@
                 </div>
 
                 <div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:10px;">
-                    <button type="button" class="btn btn-primary" style="flex:1 1 150px;min-width:130px;">
-                        我来帮忙 / 立即沟通（占位）
-                    </button>
+                    @auth
+                        @if(auth()->id() !== $task->user_id)
+                            <button 
+                                type="button" 
+                                id="contact-btn"
+                                class="btn btn-primary" 
+                                style="flex:1 1 150px;min-width:130px;position:relative;"
+                                onclick="startChat({{ $task->user_id }}, {{ $task->id }}, 'task', this)"
+                            >
+                                <span id="contact-btn-text">我来帮忙 / 立即沟通</span>
+                                <svg id="contact-btn-spinner" class="hidden absolute inset-0 m-auto w-5 h-5 text-white animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </button>
+                        @else
+                            <button 
+                                type="button" 
+                                class="btn btn-secondary" 
+                                style="flex:1 1 150px;min-width:130px;background:#f3f4f6;color:#6b7280;border:none;cursor:not-allowed;"
+                                disabled
+                            >
+                                这是您发布的任务
+                            </button>
+                        @endif
+                    @else
+                        <a 
+                            href="{{ route('login') }}"
+                            class="btn btn-primary"
+                            style="flex:1 1 150px;min-width:130px;text-decoration:none;display:flex;align-items:center;justify-content:center;"
+                        >
+                            我来帮忙 / 立即沟通
+                        </a>
+                    @endauth
                     @auth
                         @php
                             $isLiked = $task->isLikedBy(auth()->user());
@@ -227,7 +258,103 @@
                     toggleWishlist(taskId, this, itemType);
                 });
             }
+
+            // Note: Contact button now uses onclick="startChat()" function defined below
         });
+
+        /**
+         * Start Chat - Apple-style interaction with loading state
+         * @param {number} receiverId - The seller's/user's ID
+         * @param {number} itemId - The product or task ID
+         * @param {string} type - The type: 'product' or 'task'
+         * @param {HTMLElement} buttonElement - The button element that was clicked
+         */
+        async function startChat(receiverId, itemId, type, buttonElement) {
+            if (!receiverId || !itemId || !type) {
+                showToast('参数错误，请重试');
+                return;
+            }
+
+            // Get button elements
+            const buttonText = buttonElement.querySelector('#buy-btn-text') || buttonElement.querySelector('#contact-btn-text') || buttonElement;
+            const spinner = buttonElement.querySelector('#buy-btn-spinner') || buttonElement.querySelector('#contact-btn-spinner');
+            
+            // Store original state
+            const originalText = buttonText.textContent;
+            const originalDisabled = buttonElement.disabled;
+
+            // Disable button and show loading state
+            buttonElement.disabled = true;
+            buttonElement.classList.add('opacity-75', 'cursor-wait');
+            
+            if (buttonText && buttonText !== buttonElement) {
+                buttonText.style.display = 'none';
+            }
+            if (spinner) {
+                spinner.classList.remove('hidden');
+            } else {
+                // If no spinner exists, create one or show text
+                buttonText.textContent = '正在连接...';
+            }
+
+            try {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+                
+                // Prepare request body
+                const requestBody = {
+                    receiver_id: receiverId
+                };
+                
+                if (type === 'product') {
+                    requestBody.product_id = itemId;
+                } else if (type === 'task') {
+                    requestBody.task_id = itemId;
+                }
+
+                const response = await fetch('/conversations/start', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || '无法连接到卖家');
+                }
+
+                if (data.status === 'success' && data.redirect_url) {
+                    // Redirect to chat page
+                    window.location.href = data.redirect_url;
+                } else {
+                    throw new Error('响应格式错误');
+                }
+            } catch (error) {
+                console.error('Error starting conversation:', error);
+                
+                // Show error toast
+                showToast('无法连接到卖家');
+                
+                // Reset button state
+                buttonElement.disabled = originalDisabled;
+                buttonElement.classList.remove('opacity-75', 'cursor-wait');
+                
+                if (buttonText && buttonText !== buttonElement) {
+                    buttonText.style.display = '';
+                    buttonText.textContent = originalText;
+                } else {
+                    buttonText.textContent = originalText;
+                }
+                
+                if (spinner) {
+                    spinner.classList.add('hidden');
+                }
+            }
+        }
     </script>
 @endsection
 

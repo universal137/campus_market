@@ -8,6 +8,8 @@ use App\Http\Controllers\ItemController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\WishlistController;
+use App\Http\Controllers\ChatController;
+use App\Http\Controllers\ConversationController;
 
 Route::get('/', function () {
     // 获取所有分类
@@ -129,6 +131,23 @@ Route::middleware('auth')->group(function () {
     
     // Collection route
     Route::get('/my-collection', [\App\Http\Controllers\UserController::class, 'myCollection'])->name('user.collection');
+    
+    // Chat routes
+    Route::get('/chat', [ChatController::class, 'index'])->name('chat.index');
+    Route::get('/chat/{conversation}', [ConversationController::class, 'show'])->name('chat.show');
+    Route::post('/chat/{conversation}/message', [ChatController::class, 'sendMessage'])->name('chat.sendMessage');
+    Route::post('/chat/start', [ChatController::class, 'startConversation'])->name('chat.start');
+    
+    // Conversation routes
+    Route::post('/conversations/start', [ConversationController::class, 'checkOrCreate'])->name('conversations.start');
+    
+    // Conversation messages API routes (for SPA)
+    Route::get('/conversations/{id}/messages', [ConversationController::class, 'getMessages'])->name('conversations.messages.index');
+    Route::post('/conversations/{id}/messages', [ConversationController::class, 'store'])->name('conversations.messages.store');
+    Route::delete('/conversations/{id}', [ConversationController::class, 'destroy'])->name('conversations.destroy');
+    
+    // Chat data API route (for SPA)
+    Route::get('/api/conversations/{id}', [ConversationController::class, 'getChatData'])->name('api.conversations.show');
 });
 
 Route::get('/user/published', function () {

@@ -39,4 +39,20 @@ class Item extends Model
     {
         return $this->wishlistedBy()->where('user_id', $user->id)->exists();
     }
+
+    /**
+     * Get all orders for this product.
+     */
+    public function orders()
+    {
+        return $this->hasMany(Order::class, 'product_id');
+    }
+
+    /**
+     * Get all conversations related to this product.
+     */
+    public function conversations()
+    {
+        return $this->hasMany(Conversation::class, 'product_id');
+    }
 }
