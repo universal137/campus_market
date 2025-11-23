@@ -126,6 +126,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/user/wishlist', [\App\Http\Controllers\UserController::class, 'wishlist'])->name('user.wishlist');
     Route::post('/wishlist/{id}', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
     Route::post('/wishlist/task/{id}', [WishlistController::class, 'toggleTask'])->name('wishlist.task.toggle');
+    
+    // Collection route
+    Route::get('/my-collection', [\App\Http\Controllers\UserController::class, 'myCollection'])->name('user.collection');
 });
 
 Route::get('/user/published', function () {

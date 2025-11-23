@@ -59,16 +59,18 @@
                         我来帮忙 / 立即沟通（占位）
                     </button>
                     @auth
+                        @php
+                            $isLiked = $task->isLikedBy(auth()->user());
+                        @endphp
                         <button 
                             type="button" 
                             id="wishlist-btn"
-                            onclick="toggleWishlist({{ $task->id }}, this, 'task')"
-                            class="wishlist-detail-btn"
-                            style="flex:1 1 130px;min-width:120px;padding:12px 20px;border-radius:999px;font-weight:500;font-size:14px;cursor:pointer;{{ $task->isLikedBy(auth()->user()) ? 'background:#fee2e2;color:#991b1b;' : 'background:#f3f4f6;color:#374151;' }}border:none;transition:all 0.2s ease;"
+                            class="wishlist-detail-btn {{ $isLiked ? 'wishlist-detail-btn--liked' : 'wishlist-detail-btn--unliked' }}"
                             data-task-id="{{ $task->id }}"
-                            data-liked="{{ $task->isLikedBy(auth()->user()) ? 'true' : 'false' }}"
+                            data-liked="{{ $isLiked ? 'true' : 'false' }}"
+                            data-item-type="task"
                         >
-                            <span id="wishlist-text">{{ $task->isLikedBy(auth()->user()) ? '已关注任务 ❤️' : '关注此任务' }}</span>
+                            <span id="wishlist-text">{{ $isLiked ? '已关注任务 ❤️' : '关注此任务' }}</span>
                         </button>
                     @else
                         <a 
@@ -92,11 +94,30 @@
     </div>
 
     <style>
+        .wishlist-detail-btn {
+            flex: 1 1 130px;
+            min-width: 120px;
+            padding: 12px 20px;
+            border-radius: 999px;
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+        }
+        .wishlist-detail-btn--liked {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .wishlist-detail-btn--unliked {
+            background: #f3f4f6;
+            color: #374151;
+        }
         .wishlist-detail-btn:hover {
             background: #e5e7eb !important;
             transform: translateY(-1px);
         }
-        .wishlist-detail-btn[data-liked="true"]:hover {
+        .wishlist-detail-btn--liked:hover {
             background: #fecaca !important;
         }
         .wishlist-detail-btn:active {
@@ -126,13 +147,13 @@
             if (isLiked) {
                 wishlistText.textContent = unlikedText;
                 btnElement.setAttribute('data-liked', 'false');
-                btnElement.style.background = '#f3f4f6';
-                btnElement.style.color = '#374151';
+                btnElement.classList.remove('wishlist-detail-btn--liked');
+                btnElement.classList.add('wishlist-detail-btn--unliked');
             } else {
                 wishlistText.textContent = likedText;
                 btnElement.setAttribute('data-liked', 'true');
-                btnElement.style.background = '#fee2e2';
-                btnElement.style.color = '#991b1b';
+                btnElement.classList.remove('wishlist-detail-btn--unliked');
+                btnElement.classList.add('wishlist-detail-btn--liked');
             }
             
             // 2. Trigger Animation - Button scale effect (bounce)
@@ -163,13 +184,13 @@
                 if (isLiked) {
                     wishlistText.textContent = likedText;
                     btnElement.setAttribute('data-liked', 'true');
-                    btnElement.style.background = '#fee2e2';
-                    btnElement.style.color = '#991b1b';
+                    btnElement.classList.remove('wishlist-detail-btn--unliked');
+                    btnElement.classList.add('wishlist-detail-btn--liked');
                 } else {
                     wishlistText.textContent = unlikedText;
                     btnElement.setAttribute('data-liked', 'false');
-                    btnElement.style.background = '#f3f4f6';
-                    btnElement.style.color = '#374151';
+                    btnElement.classList.remove('wishlist-detail-btn--liked');
+                    btnElement.classList.add('wishlist-detail-btn--unliked');
                 }
                 showToast('操作失败，请重试');
             });
@@ -195,6 +216,18 @@
                 toast.classList.add('opacity-0', 'translate-y-4');
             }, 2000);
         }
+
+        // Initialize event listener for wishlist button
+        document.addEventListener('DOMContentLoaded', function() {
+            const wishlistBtn = document.getElementById('wishlist-btn');
+            if (wishlistBtn) {
+                wishlistBtn.addEventListener('click', function() {
+                    const taskId = this.getAttribute('data-task-id');
+                    const itemType = this.getAttribute('data-item-type') || 'task';
+                    toggleWishlist(taskId, this, itemType);
+                });
+            }
+        });
     </script>
 @endsection
 

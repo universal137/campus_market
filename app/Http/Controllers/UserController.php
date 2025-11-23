@@ -29,5 +29,28 @@ class UserController extends Controller
         
         return view('user.wishlist', compact('wishlistProducts', 'wishlistTasks'));
     }
+
+    /**
+     * Display the user's collection (My Collection) page.
+     * Aggregates both Saved Products and Followed Tasks.
+     * 
+     * @return \Illuminate\View\View
+     */
+    public function myCollection()
+    {
+        // Fetch wishlist products with user relationship
+        $wishlistProducts = Auth::user()->wishlist()
+            ->with('user')
+            ->latest()
+            ->get();
+        
+        // Fetch wishlist tasks with user relationship
+        $wishlistTasks = Auth::user()->wishlistTasks()
+            ->with('user')
+            ->latest()
+            ->get();
+        
+        return view('user.collection', compact('wishlistProducts', 'wishlistTasks'));
+    }
 }
 

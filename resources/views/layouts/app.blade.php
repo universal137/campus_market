@@ -93,7 +93,7 @@
                                             <span class="text-xs text-gray-500 block">查看交易记录</span>
                                         </span>
                                     </a>
-                                    <a href="/user/favorites" class="user-dropdown__item">
+                                    <a href="{{ route('user.collection') }}" class="user-dropdown__item">
                                         <span class="w-5 h-5 text-gray-500 flex items-center justify-center">
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c0 4-7 7-7 7s-7-3-7-7a4 4 0 0 1 4-4c1.2 0 2.4.8 3 2 .6-1.2 1.8-2 3-2a4 4 0 0 1 4 4Z"/></svg>
                                         </span>
