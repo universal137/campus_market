@@ -10,6 +10,9 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\ConversationController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\ProductController;
 
 Route::get('/', function () {
     // 获取所有分类
@@ -111,6 +114,14 @@ Route::get('/', function () {
 Route::get('/items', [ItemController::class, 'index'])->name('items.index');
 Route::get('/items/{item}', [ItemController::class, 'show'])->name('items.show');
 Route::post('/items', [ItemController::class, 'store'])->name('items.store');
+Route::get('/products/create', [ProductController::class, 'create'])->name('products.create')->middleware('auth');
+
+// Item management routes (require authentication)
+Route::middleware('auth')->group(function () {
+    Route::get('/items/{item}/edit', [ItemController::class, 'edit'])->name('items.edit');
+    Route::put('/items/{item}', [ItemController::class, 'update'])->name('items.update');
+    Route::delete('/items/{item}', [ItemController::class, 'destroy'])->name('items.destroy');
+});
 
 Route::get('/tasks', [TaskController::class, 'index'])->name('tasks.index');
 Route::post('/tasks', [TaskController::class, 'store'])->name('tasks.store');
@@ -138,6 +149,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/chat/{conversation}/message', [ChatController::class, 'sendMessage'])->name('chat.sendMessage');
     Route::post('/chat/start', [ChatController::class, 'startConversation'])->name('chat.start');
     
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::post('/orders/create', [OrderController::class, 'createAndPay'])->name('orders.create');
+
+    Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+    
     // Conversation routes
     Route::post('/conversations/start', [ConversationController::class, 'checkOrCreate'])->name('conversations.start');
     
@@ -151,12 +167,15 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::get('/user/published', function () {
-    return view('user.published');
-})->name('user.published');
+    $products = auth()->check() 
+        ? auth()->user()->items()->with(['category'])->latest()->get()
+        : collect();
+    return view('user.published', compact('products'));
+})->name('user.published')->middleware('auth');
 
-Route::get('/user/orders', function () {
-    return view('user.orders');
-})->name('user.orders');
+Route::get('/user/orders', [OrderController::class, 'index'])->name('user.orders')->middleware('auth');
+Route::put('/orders/{id}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus')->middleware('auth');
+Route::post('/orders/{id}/review', [OrderController::class, 'storeReview'])->name('orders.storeReview')->middleware('auth');
 
 Route::get('/user/favorites', function () {
     return view('user.favorites');

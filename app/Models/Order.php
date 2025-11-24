@@ -13,6 +13,7 @@ class Order extends Model
         'buyer_id',
         'seller_id',
         'product_id',
+        'price',
         'status',
         'transaction_method',
         'rating',
@@ -45,6 +46,14 @@ class Order extends Model
     public function product()
     {
         return $this->belongsTo(Item::class, 'product_id');
+    }
+
+    /**
+     * Get the review associated with the order.
+     */
+    public function review()
+    {
+        return $this->hasOne(Review::class);
     }
 
     /**

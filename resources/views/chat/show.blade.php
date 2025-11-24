@@ -67,7 +67,10 @@
                     <div class="text-xs text-red-500 font-bold">¥{{ $conversation->product->price }}</div>
                 </div>
             </div>
-            <a href="{{ route('items.show', $conversation->product->id) }}" class="px-4 py-1.5 bg-blue-50 text-blue-600 text-xs rounded-full font-bold hover:bg-blue-100 transition">查看详情</a>
+            <div class="flex items-center gap-2">
+                <a href="{{ route('items.show', $conversation->product->id) }}" class="px-4 py-1.5 bg-blue-50 text-blue-600 text-xs rounded-full font-bold hover:bg-blue-100 transition">查看详情</a>
+                <button id="open-cashier-btn" type="button" onclick="openPaymentModal({{ $conversation->product->id }})" class="px-5 py-2 rounded-full bg-black text-white text-xs font-semibold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition active:scale-[0.98]">立即购买</button>
+            </div>
             @endif
         </div>
 
@@ -91,6 +94,84 @@
         </div>
     </div>
 </div>
+
+@if($conversation->product)
+<div id="cashier-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 opacity-0 pointer-events-none transition-opacity duration-300">
+    <div id="cashier-card" class="w-full max-w-md mx-4 bg-white rounded-3xl shadow-2xl overflow-hidden transform scale-95 opacity-0 translate-y-6 transition duration-300">
+        <div class="flex justify-end p-4">
+            <button id="close-cashier-btn" class="w-9 h-9 rounded-full bg-gray-100 text-gray-400 hover:text-gray-600 flex items-center justify-center transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div id="cashier-body" class="px-8 pb-10 -mt-4 space-y-6">
+            <div>
+                <p class="text-xs uppercase tracking-[0.3em] text-gray-400 mb-3">Cashier Desk</p>
+                <h3 class="text-2xl font-bold text-gray-900 mb-6">确认订单信息</h3>
+                <div class="flex items-center gap-4 p-4 rounded-2xl border border-gray-100 bg-gray-50/60">
+                    <div class="w-16 h-16 rounded-2xl overflow-hidden bg-gray-200">
+                        <img src="{{ $productImage }}" class="w-full h-full object-cover" alt="product image" data-cashier-image data-placeholder="{{ asset('images/placeholder-product.png') }}">
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-semibold text-gray-900 line-clamp-2" data-cashier-title>{{ $conversation->product->title }}</p>
+                        <p class="text-lg font-bold text-gray-900 mt-1" data-cashier-price>¥{{ $conversation->product->price }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <p class="text-xs font-semibold text-gray-500 uppercase mb-3 tracking-wider">选择支付方式</p>
+                <div class="grid grid-cols-3 gap-3">
+                    <button type="button" class="payment-card" data-payment-card data-method="wechat">
+                        <div class="icon-circle wechat-icon">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M18.946 10.618c.197-.493.305-.998.305-1.511C19.251 6.501 16.486 4 12.999 4 9.514 4 6.75 6.5 6.75 9.107c0 2.604 2.764 4.105 6.249 4.105.712 0 1.396-.07 2.045-.2l2.336 1.408-.434-1.802zM9.5 8.5c-.414 0-.75-.336-.75-.75s.336-.75.75-.75.75.336.75.75-.336.75-.75.75zm5 0c-.414 0-.75-.336-.75-.75s.336-.75.75-.75.75.336.75.75-.336.75-.75.75zM21.5 15.5c0-1.071-.682-2.05-1.804-2.697C20.443 13.422 20.75 14.447 20.75 15.5c0 1.495-.699 2.865-1.915 3.894l.603 2.506-3.249-1.958a8.639 8.639 0 01-2.19.274c-3.486 0-6.25-1.501-6.25-4.107 0-1.282.676-2.12 1.985-2.694-.122.37-.189.757-.189 1.154 0 2.606 2.764 4.107 6.25 4.107.712 0 1.396-.07 2.045-.201l3.397 1.985-.437-1.88c1.03-.778 1.6-1.8 1.6-2.973z"/>
+                            </svg>
+                        </div>
+                        <span class="text-xs font-semibold">微信支付</span>
+                    </button>
+
+                    <button type="button" class="payment-card" data-payment-card data-method="alipay">
+                        <div class="icon-circle alipay-icon">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zm6.79 10.64c.8.29 1.52.51 2.16.67.86-.64 1.65-1.39 2.34-2.22-.32-.11-.64-.23-.98-.36l-.62 1.05a12.2 12.2 0 01-2.54-.77l-.36.63zm5.25-6.45c.29 0 .52.23.52.52a.525.525 0 01-.52.53h-2.98v1.07h2.54c.29 0 .53.23.53.52 0 .3-.24.53-.53.53h-2.54V13h-1.35v-1.64H10.2c-.29 0-.53-.23-.53-.53 0-.29.24-.52.53-.52h1.65V9.35H9.96c-.29 0-.52-.24-.52-.53a.52.52 0 01.52-.52h2V7h1.35v1.09h2.73z"/>
+                            </svg>
+                        </div>
+                        <span class="text-xs font-semibold">支付宝</span>
+                    </button>
+
+                    <button type="button" class="payment-card" data-payment-card data-method="offline">
+                        <div class="icon-circle offline-icon">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M4 5h16v2H4zm0 4h16v10H4zm2 2v6h12v-6z"/>
+                            </svg>
+                        </div>
+                        <span class="text-xs font-semibold">线下交易</span>
+                    </button>
+                </div>
+            </div>
+
+            <button id="confirm-payment-btn" class="w-full py-3 rounded-full bg-black text-white font-semibold text-sm tracking-wide shadow-lg shadow-black/10 hover:shadow-black/20 transition disabled:opacity-60 disabled:cursor-not-allowed">
+                确认付款
+            </button>
+        </div>
+
+        <div id="cashier-success" class="hidden flex flex-col items-center justify-center gap-4 px-8 pb-12 pt-4">
+            <div class="w-32 h-32 flex items-center justify-center rounded-full bg-emerald-50">
+                <svg class="w-20 h-20 text-emerald-500" viewBox="0 0 52 52">
+                    <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+                    <path class="checkmark-check" fill="none" d="M16 26l7 7 14-16"/>
+                </svg>
+            </div>
+            <div class="text-center space-y-1">
+                <p class="text-lg font-semibold text-gray-900">支付成功</p>
+                <p class="text-sm text-gray-500">正在跳转订单详情...</p>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
 
 <script>
     let conversationId = {{ $conversation->id }};
@@ -405,20 +486,29 @@
     function updateProductHeader(conversation) {
         if (conversation && conversation.product) {
             // API already returns formatted image path (starts with /storage/ or /images/ or full URL)
-            const productImage = conversation.product.image || '/images/placeholder-product.png';
-            
+            const normalizedProduct = {
+                id: conversation.product.id,
+                title: conversation.product.title,
+                price: conversation.product.price,
+                image: conversation.product.image || '{{ asset('images/placeholder-product.png') }}',
+            };
+
             productHeader.innerHTML = `
                 <div class="flex items-center gap-3 animate-fade-in">
                     <div class="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden">
-                        <img src="${productImage}" class="w-full h-full object-cover">
+                        <img src="${normalizedProduct.image}" class="w-full h-full object-cover">
                     </div>
                     <div>
-                        <div class="text-sm font-bold text-gray-900">正在沟通: ${escapeHtml(conversation.product.title)}</div>
-                        <div class="text-xs text-red-500 font-bold">¥${conversation.product.price}</div>
+                        <div class="text-sm font-bold text-gray-900">正在沟通: ${escapeHtml(normalizedProduct.title)}</div>
+                        <div class="text-xs text-red-500 font-bold">¥${normalizedProduct.price}</div>
                     </div>
                 </div>
-                <a href="/items/${conversation.product.id}" class="px-4 py-1.5 bg-blue-50 text-blue-600 text-xs rounded-full font-bold hover:bg-blue-100 transition animate-fade-in">查看详情</a>
+                <div class="flex items-center gap-2 animate-fade-in">
+                    <a href="/items/${normalizedProduct.id}" class="px-4 py-1.5 bg-blue-50 text-blue-600 text-xs rounded-full font-bold hover:bg-blue-100 transition">查看详情</a>
+                    <button type="button" class="px-5 py-2 rounded-full bg-black text-white text-xs font-semibold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition active:scale-[0.98]" onclick="openPaymentModal(${normalizedProduct.id})">立即购买</button>
+                </div>
             `;
+            updateCashierProductDetails(normalizedProduct);
             productHeader.style.display = 'flex';
         } else {
             productHeader.innerHTML = '';
@@ -467,6 +557,173 @@
             alert('删除失败，请重试');
         });
     }
+
+    // Cashier Desk Logic
+    const cashierModal = document.getElementById('cashier-modal');
+    const cashierCard = document.getElementById('cashier-card');
+    const closeCashierBtn = document.getElementById('close-cashier-btn');
+    const paymentCardElements = document.querySelectorAll('[data-payment-card]');
+    const confirmPaymentBtn = document.getElementById('confirm-payment-btn');
+    const cashierBody = document.getElementById('cashier-body');
+    const cashierSuccess = document.getElementById('cashier-success');
+    const cashierProductTitle = document.querySelector('[data-cashier-title]');
+    const cashierProductPrice = document.querySelector('[data-cashier-price]');
+    const cashierProductImage = document.querySelector('[data-cashier-image]');
+    const cashierImagePlaceholder = cashierProductImage && cashierProductImage.dataset && cashierProductImage.dataset.placeholder
+        ? cashierProductImage.dataset.placeholder
+        : "{{ asset('images/placeholder-product.png') }}";
+    @php
+        $initialProductPayload = null;
+        if ($conversation->product) {
+            $initialProductPayload = [
+                'id' => $conversation->product->id,
+                'title' => $conversation->product->title,
+                'price' => $conversation->product->price,
+                'image' => $conversation->product->image_path,
+            ];
+        }
+    @endphp
+    const orderRedirectUrl = '/orders';
+    const paymentEndpoint = "{{ route('orders.create') }}";
+    const productPayload = @json($initialProductPayload);
+    let activeProductPayload = productPayload || null;
+    let activeProductId = activeProductPayload?.id || null;
+    let selectedPaymentMethod = 'wechat';
+    let paymentInFlight = false;
+
+    function updateCashierProductDetails(product) {
+        if (!product) return;
+
+        activeProductPayload = {
+            id: product.id,
+            title: product.title,
+            price: product.price,
+            image: product.image || cashierImagePlaceholder,
+        };
+        activeProductId = activeProductPayload.id;
+
+        if (cashierProductTitle) {
+            cashierProductTitle.textContent = activeProductPayload.title || '未命名商品';
+        }
+
+        if (cashierProductPrice) {
+            const priceValue = activeProductPayload.price;
+            const formattedPrice = priceValue !== undefined && priceValue !== null && !Number.isNaN(Number(priceValue))
+                ? Number(priceValue).toFixed(2)
+                : (priceValue ?? '--');
+            cashierProductPrice.textContent = `¥${formattedPrice}`;
+        }
+
+        if (cashierProductImage && activeProductPayload.image) {
+            cashierProductImage.src = activeProductPayload.image;
+        }
+    }
+
+    function openPaymentModal(productId) {
+        if (productId !== undefined && productId !== null) {
+            activeProductId = productId;
+        }
+
+        if (!activeProductId) {
+            alert('未找到商品信息，请稍后再试');
+            return;
+        }
+
+        toggleCashier(true);
+    }
+
+    function toggleCashier(open) {
+        if (!cashierModal) return;
+        if (open) {
+            cashierModal.classList.remove('pointer-events-none', 'opacity-0');
+            cashierModal.classList.add('opacity-100');
+            cashierCard.classList.remove('translate-y-6', 'opacity-0', 'scale-95');
+            cashierCard.classList.add('scale-100', 'opacity-100', 'translate-y-0');
+        } else {
+            cashierModal.classList.add('pointer-events-none', 'opacity-0');
+            cashierModal.classList.remove('opacity-100');
+            cashierCard.classList.add('scale-95', 'opacity-0', 'translate-y-6');
+            cashierCard.classList.remove('scale-100', 'opacity-100', 'translate-y-0');
+            setTimeout(() => {
+                cashierBody?.classList.remove('hidden');
+                cashierSuccess?.classList.add('hidden');
+            }, 300);
+        }
+    }
+
+    function setSelectedCard(method) {
+        paymentCardElements.forEach(card => {
+            const isSelected = card.dataset.method === method;
+            card.classList.toggle('selected', isSelected);
+        });
+        selectedPaymentMethod = method;
+    }
+
+    async function submitPayment() {
+        if (paymentInFlight) return;
+        if (!activeProductId) {
+            alert('未找到商品信息，请刷新页面后重试');
+            return;
+        }
+        paymentInFlight = true;
+        confirmPaymentBtn.disabled = true;
+        confirmPaymentBtn.textContent = '支付中...';
+
+        try {
+            const response = await fetch(paymentEndpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}',
+                },
+                body: JSON.stringify({
+                    product_id: activeProductId,
+                    payment_method: selectedPaymentMethod,
+                }),
+            });
+
+            const result = await response.json();
+            if (response.ok && result.status === 'success') {
+                showPaymentSuccess();
+            } else {
+                throw new Error(result.message || '支付失败，请稍后再试');
+            }
+        } catch (error) {
+            alert(error.message);
+        } finally {
+            paymentInFlight = false;
+            confirmPaymentBtn.disabled = false;
+            confirmPaymentBtn.textContent = '确认付款';
+        }
+    }
+
+    function showPaymentSuccess() {
+        if (!cashierBody || !cashierSuccess) return;
+        cashierBody.classList.add('hidden');
+        cashierSuccess.classList.remove('hidden');
+        setTimeout(() => {
+            window.location.href = orderRedirectUrl;
+        }, 1500);
+    }
+
+    setSelectedCard(selectedPaymentMethod);
+    if (activeProductPayload) {
+        updateCashierProductDetails(activeProductPayload);
+    }
+
+    closeCashierBtn?.addEventListener('click', () => toggleCashier(false));
+    cashierModal?.addEventListener('click', (event) => {
+        if (event.target === cashierModal) {
+            toggleCashier(false);
+        }
+    });
+
+    paymentCardElements.forEach(card => {
+        card.addEventListener('click', () => setSelectedCard(card.dataset.method));
+    });
+
+    confirmPaymentBtn?.addEventListener('click', submitPayment);
 </script>
 
 <style>
@@ -517,5 +774,99 @@
     .chat-item {
         transition: all 0.2s ease-out;
     }
+
+    .payment-card {
+        border: 1px solid rgba(229, 231, 235, 1);
+        border-radius: 1.25rem;
+        background: #fff;
+        padding: 1.25rem 0.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #374151;
+        box-shadow: 0 5px 20px -15px rgba(0,0,0,0.25);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .payment-card:hover {
+        box-shadow: 0 12px 30px -16px rgba(0,0,0,0.35);
+        transform: translateY(-2px);
+    }
+
+    .payment-card.selected {
+        border: 2px solid #000;
+        box-shadow: 0 20px 40px -18px rgba(0,0,0,0.4);
+    }
+
+    .icon-circle {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+
+    .wechat-icon {
+        background: #ecfdf5;
+        color: #059669;
+    }
+
+    .alipay-icon {
+        background: #eff6ff;
+        color: #2563eb;
+    }
+
+    .offline-icon {
+        background: #f3f4f6;
+        color: #4b5563;
+    }
+
+    .payment-card.selected .wechat-icon {
+        background: #059669;
+        color: #fff;
+    }
+
+    .payment-card.selected .alipay-icon {
+        background: #2563eb;
+        color: #fff;
+    }
+
+    .payment-card.selected .offline-icon {
+        background: #111827;
+        color: #fff;
+    }
+
+    .checkmark-circle {
+        stroke: rgba(16, 185, 129, 0.3);
+        stroke-width: 4;
+        stroke-dasharray: 160;
+        stroke-dashoffset: 160;
+        animation: drawCircle 0.8s ease forwards;
+    }
+
+    .checkmark-check {
+        stroke: #10B981;
+        stroke-width: 4;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-dasharray: 36;
+        stroke-dashoffset: 36;
+        animation: drawCheck 0.5s ease 0.6s forwards;
+    }
+
+    @keyframes drawCircle {
+        to { stroke-dashoffset: 0; }
+    }
+
+    @keyframes drawCheck {
+        to { stroke-dashoffset: 0; }
+    }
 </style>
 @endsection
+

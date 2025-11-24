@@ -13,36 +13,45 @@
                 <p class="text-gray-500 text-lg">按照分类、关键字筛选，快速找到心仪闲置</p>
             </div>
 
-            <!-- Large Floating Search Bar -->
-            <form method="GET" class="mb-8">
-                <div class="relative max-w-2xl mx-auto">
-                    <input 
-                        type="text" 
-                        id="q" 
-                        name="q" 
-                        value="{{ $filters['q'] }}" 
-                        placeholder="搜索商品，如 iPad、计算器、教材..." 
-                        class="w-full px-6 py-4 pl-14 pr-32 text-lg rounded-full border border-gray-200 bg-white shadow-lg focus:outline-none transition-shadow duration-300 ease-in-out focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        style="display: block;"
-                    >
-                    <svg class="absolute left-5 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" 
-                         width="20" 
-                         height="20" 
-                         fill="none" 
-                         stroke="currentColor" 
-                         viewBox="0 0 24 24"
-                         style="max-width: 20px; max-height: 20px;"
-                    >
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
-                    <button 
-                        type="submit" 
-                        class="absolute right-2 top-1/2 transform -translate-y-1/2 px-6 py-2 bg-blue-600 text-white rounded-full font-medium transition-all duration-200 ease-in-out hover:bg-blue-700 active:scale-95 z-10"
-                    >
-                        搜索
-                    </button>
-                </div>
-            </form>
+            <!-- Large Floating Search Bar + Primary Publish CTA -->
+            <div class="flex flex-col md:flex-row items-center gap-4 mb-8">
+                <form method="GET" class="flex-1 w-full">
+                    <div class="relative max-w-2xl mx-auto md:mx-0">
+                        <input 
+                            type="text" 
+                            id="q" 
+                            name="q" 
+                            value="{{ $filters['q'] }}" 
+                            placeholder="搜索商品，如 iPad、计算器、教材..." 
+                            class="w-full px-6 py-4 pl-14 pr-32 text-lg rounded-full border border-gray-200 bg-white shadow-lg focus:outline-none transition-shadow duration-300 ease-in-out focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            style="display: block;"
+                        >
+                        <svg class="absolute left-5 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" 
+                             width="20" 
+                             height="20" 
+                             fill="none" 
+                             stroke="currentColor" 
+                             viewBox="0 0 24 24"
+                             style="max-width: 20px; max-height: 20px;"
+                        >
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                        <button 
+                            type="submit" 
+                            class="absolute right-2 top-1/2 transform -translate-y-1/2 px-6 py-2 bg-blue-600 text-white rounded-full font-medium transition-all duration-200 ease-in-out hover:bg-blue-700 active:scale-95 z-10"
+                        >
+                            搜索
+                        </button>
+                    </div>
+                </form>
+                <a 
+                    href="{{ route('products.create') }}"
+                    class="inline-flex items-center gap-2 px-6 py-4 bg-blue-600 text-white font-semibold rounded-full shadow-lg transition-transform duration-200 hover:bg-blue-700 hover:-translate-y-0.5 active:scale-95 whitespace-nowrap"
+                >
+                    <span class="w-5 h-5 flex items-center justify-center rounded-full bg-white/20">+</span>
+                    发布闲置
+                </a>
+            </div>
 
             <!-- Horizontal Scrollable Category Pills -->
             <div class="flex gap-3 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4">
@@ -73,8 +82,7 @@
                     <p class="text-blue-100">快速发布你的商品，让闲置物品找到新主人</p>
                 </div>
                 <a 
-                    href="#publish-form" 
-                    onclick="document.getElementById('publish-form').scrollIntoView({ behavior: 'smooth' }); return false;"
+                    href="{{ route('products.create') }}" 
                     class="px-8 py-3 bg-white text-blue-600 font-semibold rounded-full transition-all duration-200 ease-in-out hover:bg-gray-50 active:scale-95 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                 >
                     立即发布
@@ -201,122 +209,6 @@
         @endif
     </div>
 
-    <!-- Publish Form Section (Hidden by default, shown when CTA is clicked) -->
-    <section id="publish-form" class="max-w-4xl mx-auto px-4 py-12">
-        <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 md:p-10">
-            <h3 class="text-2xl font-bold text-gray-900 mb-2">快速发布一条二手商品</h3>
-            <p class="text-gray-500 mb-8">填写联系人信息即可体验发布流程（推荐约在校园公共区域当面交易）</p>
-
-            <form id="publish-item-form" method="POST" action="{{ route('items.store') }}" class="space-y-6">
-                @csrf
-                
-                @if ($errors->any())
-                    <div class="bg-red-50 border border-red-200 text-red-800 rounded-xl p-4">
-                        <strong class="font-semibold">请检查以下输入：</strong>
-                        <ul class="mt-2 ml-4 list-disc space-y-1">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label for="seller_name" class="block text-sm font-semibold text-gray-700 mb-2">联系人昵称</label>
-                        <input 
-                            id="seller_name" 
-                            name="seller_name" 
-                            value="{{ old('seller_name') }}" 
-                            required
-                            class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                        >
-                    </div>
-                    <div>
-                        <label for="seller_email" class="block text-sm font-semibold text-gray-700 mb-2">校园邮箱</label>
-                        <input 
-                            type="email" 
-                            id="seller_email" 
-                            name="seller_email" 
-                            value="{{ old('seller_email') }}" 
-                            required
-                            class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                        >
-                    </div>
-                    <div>
-                        <label for="category_id" class="block text-sm font-semibold text-gray-700 mb-2">商品分类</label>
-                        <select 
-                            id="category_id" 
-                            name="category_id" 
-                            required
-                            class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                        >
-                            <option value="">请选择</option>
-                            @foreach($categories as $category)
-                                <option value="{{ $category->id }}" @selected(old('category_id') == $category->id)>{{ $category->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label for="price" class="block text-sm font-semibold text-gray-700 mb-2">价格 (¥)</label>
-                        <input 
-                            type="number" 
-                            step="0.01" 
-                            min="0" 
-                            id="price" 
-                            name="price" 
-                            value="{{ old('price') }}" 
-                            required
-                            class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                        >
-                    </div>
-                </div>
-
-                <div>
-                    <label for="title" class="block text-sm font-semibold text-gray-700 mb-2">标题</label>
-                    <input 
-                        id="title" 
-                        name="title" 
-                        value="{{ old('title') }}" 
-                        placeholder="例如：九成新考研英语黄皮书" 
-                        required
-                        class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    >
-                </div>
-
-                <div>
-                    <label for="description" class="block text-sm font-semibold text-gray-700 mb-2">详情描述</label>
-                    <textarea 
-                        id="description" 
-                        name="description" 
-                        placeholder="成色、使用情况、打包赠品等" 
-                        required
-                        rows="4"
-                        class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
-                    >{{ old('description') }}</textarea>
-                </div>
-
-                <div>
-                    <label for="deal_place" class="block text-sm font-semibold text-gray-700 mb-2">交易地点（可选）</label>
-                    <input 
-                        id="deal_place" 
-                        name="deal_place" 
-                        value="{{ old('deal_place') }}"
-                        placeholder="例如：东门奶茶店 / 图书馆一楼大厅 / 宿舍楼下公共区域"
-                        class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    >
-                    <p class="text-gray-500 text-sm mt-2">建议选择人流量较大的校园公共区域，优先当面当场验货交易。</p>
-                </div>
-
-                <button 
-                    type="submit" 
-                    class="w-full md:w-auto px-8 py-3 bg-blue-600 text-white font-semibold rounded-full transition-all duration-200 ease-in-out hover:bg-blue-700 active:scale-95 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-                >
-                    发布商品
-                </button>
-            </form>
-        </div>
-    </section>
     </div>
 
     <style>
@@ -465,5 +357,6 @@
                 toast.classList.add('opacity-0', 'translate-y-4');
             }, 2000);
         }
+
     </script>
 @endsection

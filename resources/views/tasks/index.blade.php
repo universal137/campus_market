@@ -154,10 +154,9 @@
             @endforelse
         </div>
 
-        <!-- Pagination -->
         @if($tasks->hasPages())
             <div class="mt-12 flex justify-center">
-                {{ $tasks->links('pagination::simple-tailwind') }}
+                {{ $tasks->links() }}
             </div>
         @endif
     </div>

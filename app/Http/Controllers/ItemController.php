@@ -8,6 +8,7 @@ use App\Models\User;
 use Database\Factories\ItemFactory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class ItemController extends Controller
@@ -63,6 +64,7 @@ class ItemController extends Controller
             'description' => ['required', 'string', 'max:2000'],
             'price' => ['required', 'numeric', 'min:0'],
             'deal_place' => ['nullable', 'string', 'max:120'],
+            'image' => ['required', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
         ]);
 
         $user = User::firstOrCreate(
@@ -73,6 +75,17 @@ class ItemController extends Controller
             ]
         );
 
+        // Handle image upload
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('products', 'public');
+            // Save the full URL path to the database
+            $imagePath = Storage::url($path);
+        } else {
+            // Fallback to random image if no upload (should not happen with required validation)
+            $imagePath = ItemFactory::getRandomImageUrl();
+        }
+
         Item::create([
             'user_id' => $user->id,
             'category_id' => $validated['category_id'],
@@ -80,11 +93,61 @@ class ItemController extends Controller
             'description' => $validated['description'],
             'price' => $validated['price'],
             'deal_place' => $validated['deal_place'] ?? null,
-            'image' => ItemFactory::getRandomImageUrl(),
+            'image' => $imagePath,
             'status' => 'on_sale',
         ]);
 
         return back()->with('success', '已成功发布商品，感谢分享你的闲置！');
+    }
+
+    public function edit(Item $item): View
+    {
+        if (auth()->id() !== $item->user_id) {
+            abort(403, '无权编辑此商品');
+        }
+        
+        $categories = Category::orderBy('name')->get();
+        $item->load(['category']);
+        
+        return view('items.edit', [
+            'item' => $item,
+            'categories' => $categories,
+        ]);
+    }
+
+    public function update(Request $request, Item $item): RedirectResponse
+    {
+        if (auth()->id() !== $item->user_id) {
+            abort(403, '无权编辑此商品');
+        }
+        
+        $validated = $request->validate([
+            'category_id' => ['required', 'exists:categories,id'],
+            'title' => ['required', 'string', 'max:120'],
+            'description' => ['required', 'string', 'max:2000'],
+            'price' => ['required', 'numeric', 'min:0'],
+            'deal_place' => ['nullable', 'string', 'max:120'],
+            'status' => ['required', 'in:on_sale,sold'],
+        ]);
+
+        $item->update($validated);
+
+        return redirect()->route('user.published')->with('success', '商品信息已更新！');
+    }
+
+    public function destroy(Item $item): RedirectResponse
+    {
+        if (auth()->id() !== $item->user_id) {
+            abort(403, '无权删除此商品');
+        }
+        
+        $item->delete();
+
+        if (request()->expectsJson()) {
+            return response()->json(['status' => 'success', 'message' => '商品已删除']);
+        }
+
+        return redirect()->route('user.published')->with('success', '商品已删除');
     }
 }
 

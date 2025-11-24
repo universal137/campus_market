@@ -55,6 +55,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the items that the user has published.
+     */
+    public function items()
+    {
+        return $this->hasMany(Item::class);
+    }
+
+    /**
      * Get the items that the user has wishlisted.
      */
     public function wishlist()
@@ -118,6 +126,24 @@ class User extends Authenticatable
     public function ordersSold()
     {
         return $this->hasMany(Order::class, 'seller_id');
+    }
+
+    /**
+     * Get reviews received by the user.
+     */
+    public function reviewsReceived()
+    {
+        return $this->hasMany(Review::class, 'reviewee_id');
+    }
+
+    /**
+     * Calculate the user's reputation score based on received reviews.
+     */
+    public function getReputationAttribute(): float
+    {
+        $average = $this->reviewsReceived()->avg('rating');
+
+        return $average === null ? 5.0 : round((float) $average, 1);
     }
 
     /**

@@ -49,6 +49,14 @@ class Item extends Model
     }
 
     /**
+     * Get the order for this product (usually one).
+     */
+    public function order()
+    {
+        return $this->hasOne(Order::class, 'product_id');
+    }
+
+    /**
      * Get all conversations related to this product.
      */
     public function conversations()
