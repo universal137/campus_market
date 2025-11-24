@@ -3,6 +3,12 @@
 @section('title', '个人资料 · 校园易')
 
 @section('content')
+@php
+    $user = $user ?? auth()->user();
+    $soldCount = $user->ordersSold()->where('status', 'completed')->count();
+    $boughtCount = $user->ordersBought()->where('status', 'completed')->count();
+    $reputationScore = number_format($user->reputation, 1);
+@endphp
 <div style="max-width: 1200px; margin: 60px auto; padding: 0 24px;">
     @if (session('success'))
         <div id="success-message" class="success-message" style="background:#dcfce7;color:#166534;padding:16px 20px;border-radius:12px;margin-bottom:24px;box-shadow:0 4px 12px rgba(34,197,94,0.15);display:flex;align-items:center;gap:10px;font-weight:500;position:relative;overflow:hidden;">
@@ -40,31 +46,39 @@
 
                 <!-- Name -->
                 <h2 style="margin: 0 0 12px; font-size: 24px; font-weight: 700; color: #0f172a;">
-                    {{ auth()->user()->name ?: '同学' }}
+                    {{ $user->name ?: '同学' }}
                 </h2>
 
                 <!-- Verified Badge -->
-                <div style="display: inline-flex; align-items: center; gap: 6px; background: #dcfce7; color: #166534; padding: 6px 16px; border-radius: 999px; margin-bottom: 24px; font-size: 13px; font-weight: 600;">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                        <polyline points="22 4 12 14.01 9 11.01"/>
-                    </svg>
-                    <span>已认证学生</span>
+                <div style="margin-bottom: 24px;">
+                    @if($user->is_verified)
+                        <span class="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold flex items-center gap-1">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                <polyline points="22 4 12 14.01 9 11.01"/>
+                            </svg>
+                            已认证学生
+                        </span>
+                    @else
+                        <span class="px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-bold">
+                            未认证 (请完善信息)
+                        </span>
+                    @endif
                 </div>
 
                 <!-- Stats -->
                 <div style="width: 100%; display: flex; flex-direction: column; gap: 16px; margin-top: 8px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #F5F5F7;">
                         <span style="color: #64748b; font-size: 14px;">已售出</span>
-                        <span style="color: #0f172a; font-size: 18px; font-weight: 700;">0</span>
+                        <span style="color: #0f172a; font-size: 18px; font-weight: 700;">{{ $soldCount }}</span>
                     </div>
                     <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #F5F5F7;">
                         <span style="color: #64748b; font-size: 14px;">已购买</span>
-                        <span style="color: #0f172a; font-size: 18px; font-weight: 700;">0</span>
+                        <span style="color: #0f172a; font-size: 18px; font-weight: 700;">{{ $boughtCount }}</span>
                     </div>
                     <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0;">
                         <span style="color: #64748b; font-size: 14px;">信誉评分</span>
-                        <span style="color: #0f172a; font-size: 18px; font-weight: 700;">5.0 ⭐</span>
+                        <span style="color: #0f172a; font-size: 18px; font-weight: 700;">{{ $reputationScore }} ⭐</span>
                     </div>
                 </div>
             </div>
@@ -174,7 +188,7 @@
                         <div>
                             <label for="student_id" style="display: block; margin-bottom: 8px; font-weight: 600; color: #0f172a; font-size: 14px;">
                                 学号
-                                @if(auth()->user()->student_id)
+                                @if($user->is_verified)
                                     <span style="display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 600;">
                                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>

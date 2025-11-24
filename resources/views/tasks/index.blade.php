@@ -162,27 +162,40 @@
     </div>
 </div>
 
-<!-- Publish Task Modal -->
-<div id="publishModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4" onclick="closePublishModal(event)">
-    <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
-        <div class="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between rounded-t-3xl">
-            <div>
-                <h3 class="text-2xl font-bold text-gray-900">发布互助任务</h3>
-                <p class="text-gray-500 text-sm mt-1">填写基础信息即可创建任务</p>
-            </div>
-            <button 
-                onclick="closePublishModal()"
-                class="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors duration-200"
-            >
-                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
-        </div>
+<style>
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .line-clamp-3 {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+</style>
 
-        <form method="POST" action="{{ route('tasks.store') }}" class="p-6 md:p-8 space-y-6">
+<!-- Publish Task Modal -->
+<div 
+    id="publishModal" 
+    class="hidden fixed inset-0 z-[9999] items-center justify-center overflow-y-auto px-4 py-6" 
+    role="dialog" 
+    aria-modal="true"
+>
+    <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" onclick="closePublishModal()"></div>
+
+    <div class="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl p-8 transform transition-all m-auto" onclick="event.stopPropagation()">
+        <button type="button" onclick="closePublishModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-2">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">发布互助任务</h2>
+        
+        <form action="{{ route('tasks.store') }}" method="POST" class="space-y-6">
             @csrf
-            
+
             @if ($errors->any())
                 <div class="bg-red-50 border border-red-200 text-red-800 rounded-xl p-4">
                     <strong class="font-semibold">请检查以下输入：</strong>
@@ -255,66 +268,166 @@
                 >{{ old('content') }}</textarea>
             </div>
 
-            <div class="flex gap-4 pt-4">
-                <button 
-                    type="button"
-                    onclick="closePublishModal()"
-                    class="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-full font-medium transition-all duration-200 ease-in-out hover:bg-gray-200 active:scale-95"
-                >
-                    取消
-                </button>
-                <button 
-                    type="submit" 
-                    class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-full font-medium transition-all duration-200 ease-in-out hover:bg-blue-700 active:scale-95 shadow-md hover:shadow-lg"
-                >
-                    发布任务
-                </button>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">任务地点</label>
+                <div class="flex gap-2">
+                    <input 
+                        id="location-input"
+                        type="text"
+                        placeholder="输入地点 (如: 兰州大学 图书馆)"
+                        class="flex-1 px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    >
+                    <button 
+                        type="button"
+                        id="location-search-btn"
+                        class="px-5 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
+                    >
+                        搜索
+                    </button>
+                </div>
+                <div id="task-map" class="h-72 w-full rounded-2xl mt-2 overflow-hidden border border-gray-200"></div>
+                <input type="hidden" name="lat" id="task-lat" value="{{ old('lat') }}">
+                <input type="hidden" name="lng" id="task-lng" value="{{ old('lng') }}">
+            </div>
+
+            <div class="mt-8 flex justify-end gap-3">
+                <button type="button" onclick="closePublishModal()" class="px-6 py-2.5 rounded-full bg-gray-100 text-gray-700 font-bold hover:bg-gray-200 transition">取消</button>
+                <button type="submit" class="px-6 py-2.5 rounded-full bg-blue-600 text-white font-bold hover:bg-blue-700 transition shadow-lg">发布任务</button>
             </div>
         </form>
     </div>
 </div>
 
-<style>
-    .line-clamp-2 {
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-    .line-clamp-3 {
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-</style>
-
 <script>
-    // Modal Functions
-    function openPublishModal() {
-        document.getElementById('publishModal').classList.remove('hidden');
-        document.getElementById('publishModal').classList.add('flex');
-        document.body.style.overflow = 'hidden';
+    let taskMapInstance = null;
+    let taskMapMarker = null;
+
+    function initializeTaskMap() {
+        if (taskMapInstance) {
+            taskMapInstance.invalidateSize();
+            return;
+        }
+
+        const mapElement = document.getElementById('task-map');
+        if (!mapElement || typeof L === 'undefined') {
+            return;
+        }
+
+        const defaultLatLng = [36.061089, 103.834304]; // Lanzhou University approx
+        const latInput = document.getElementById('task-lat');
+        const lngInput = document.getElementById('task-lng');
+        const initialLat = parseFloat(latInput?.value) || defaultLatLng[0];
+        const initialLng = parseFloat(lngInput?.value) || defaultLatLng[1];
+
+        taskMapInstance = L.map(mapElement, {
+            center: [initialLat, initialLng],
+            zoom: 15,
+            zoomControl: true,
+            scrollWheelZoom: true
+        });
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(taskMapInstance);
+
+        taskMapMarker = L.marker([initialLat, initialLng], {
+            draggable: true
+        }).addTo(taskMapInstance);
+
+        taskMapMarker.on('dragend', function (event) {
+            const latLng = event.target.getLatLng();
+            latInput.value = latLng.lat.toFixed(8);
+            lngInput.value = latLng.lng.toFixed(8);
+        });
+
+        taskMapInstance.on('click', function (event) {
+            taskMapMarker.setLatLng(event.latlng);
+            latInput.value = event.latlng.lat.toFixed(8);
+            lngInput.value = event.latlng.lng.toFixed(8);
+        });
+
+        const searchButton = document.getElementById('location-search-btn');
+        const locationInput = document.getElementById('location-input');
+        if (searchButton && locationInput) {
+            const performSearch = async () => {
+                const query = locationInput.value.trim();
+                if (!query) {
+                    alert('请输入要搜索的地点');
+                    return;
+                }
+
+                searchButton.disabled = true;
+                searchButton.textContent = '搜索中...';
+
+                try {
+                    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`, {
+                        headers: {
+                            'Accept-Language': 'zh-CN'
+                        }
+                    });
+                    const data = await response.json();
+
+                    if (Array.isArray(data) && data.length > 0) {
+                        const { lat, lon } = data[0];
+                        const target = [parseFloat(lat), parseFloat(lon)];
+                        taskMapInstance.flyTo(target, 18, { duration: 1.2 });
+                        taskMapMarker.setLatLng(target);
+                        latInput.value = target[0].toFixed(8);
+                        lngInput.value = target[1].toFixed(8);
+                    } else {
+                        alert('未找到匹配的位置，请尝试更精确的描述');
+                    }
+                } catch (error) {
+                    console.error('Nominatim search failed:', error);
+                    alert('搜索失败，请稍后重试');
+                } finally {
+                    searchButton.disabled = false;
+                    searchButton.textContent = '搜索';
+                }
+            };
+
+            searchButton.addEventListener('click', performSearch);
+            locationInput.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    performSearch();
+                }
+            });
+        }
+
+        setTimeout(() => taskMapInstance.invalidateSize(), 200);
     }
 
-    function closePublishModal(event) {
-        if (event && event.target !== event.currentTarget) return;
-        document.getElementById('publishModal').classList.add('hidden');
-        document.getElementById('publishModal').classList.remove('flex');
+    function openPublishModal() {
+        const modal = document.getElementById('publishModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+
+        setTimeout(() => {
+            initializeTaskMap();
+            if (taskMapInstance) {
+                taskMapInstance.invalidateSize();
+            }
+        }, 200);
+    }
+
+    function closePublishModal() {
+        const modal = document.getElementById('publishModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
         document.body.style.overflow = '';
     }
 
-    // Staggered Fade-in Entry Animation
     document.addEventListener('DOMContentLoaded', function() {
         const taskCards = document.querySelectorAll('.task-card-entry');
         
         taskCards.forEach((card, index) => {
             setTimeout(() => {
-                // Remove initial invisible state
                 card.classList.remove('opacity-0', 'translate-y-8');
-                // Add visible state
                 card.classList.add('opacity-100', 'translate-y-0');
-            }, index * 100); // 100ms delay between each card
+            }, index * 100);
         });
     });
 </script>

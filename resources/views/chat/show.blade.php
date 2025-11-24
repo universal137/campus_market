@@ -37,7 +37,7 @@
                         <p class="text-xs text-gray-500 truncate mt-0.5">{{ $chat['last_message']->body ?? '开始聊天...' }}</p>
                     </div>
                     
-                    <button onclick="event.stopPropagation(); deleteChat({{ $chat['id'] }}, this)" class="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-50 text-gray-400 hover:text-red-500 z-10">
+                    <button onclick="event.stopPropagation(); deleteChat({{ $chat['id'] }}, this)" class="absolute right-2 top-1/2 -translate-y-1/2 opacity-80 group-hover:opacity-100 transition-opacity w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-50 text-gray-400 hover:text-red-500 z-10">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                         </svg>
@@ -54,13 +54,9 @@
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden">
                     @php
-                        $productImage = $conversation->product->image 
-                            ? (str_starts_with($conversation->product->image, 'http://') || str_starts_with($conversation->product->image, 'https://')
-                                ? $conversation->product->image 
-                                : asset('storage/' . ltrim($conversation->product->image, '/')))
-                            : asset('images/placeholder-product.png');
+                        $productImage = $conversation->product->image_url ?? asset('images/placeholder-product.png');
                     @endphp
-                    <img src="{{ $productImage }}" class="w-full h-full object-cover">
+                    <img src="{{ $productImage }}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='{{ asset('images/placeholder-product.png') }}';">
                 </div>
                 <div>
                     <div class="text-sm font-bold text-gray-900">正在沟通: {{ $conversation->product->title }}</div>
@@ -111,7 +107,7 @@
                 <h3 class="text-2xl font-bold text-gray-900 mb-6">确认订单信息</h3>
                 <div class="flex items-center gap-4 p-4 rounded-2xl border border-gray-100 bg-gray-50/60">
                     <div class="w-16 h-16 rounded-2xl overflow-hidden bg-gray-200">
-                        <img src="{{ $productImage }}" class="w-full h-full object-cover" alt="product image" data-cashier-image data-placeholder="{{ asset('images/placeholder-product.png') }}">
+                        <img src="{{ $productImage }}" class="w-full h-full object-cover" alt="product image" data-cashier-image data-placeholder="{{ asset('images/placeholder-product.png') }}" onerror="this.onerror=null; this.src='{{ asset('images/placeholder-product.png') }}';">
                     </div>
                     <div class="flex-1">
                         <p class="text-sm font-semibold text-gray-900 line-clamp-2" data-cashier-title>{{ $conversation->product->title }}</p>
@@ -216,6 +212,11 @@
     function appendMessage(msg) {
         const isMe = msg.user_id === currentUserId || msg.is_me;
         
+        const safeBody = typeof msg.body === 'string' ? msg.body : '';
+        const safeTimeAgo = (msg.time_ago && msg.time_ago !== 'undefined')
+            ? msg.time_ago
+            : (msg.created_at ? new Date(msg.created_at).toLocaleString('zh-CN', { hour12: false }) : '刚刚');
+
         // Avatar Logic
         let avatarHtml = '';
         if (!isMe) {
@@ -240,9 +241,9 @@
                     ? 'bg-blue-600 text-white rounded-br-sm' 
                     : 'bg-white text-gray-800 border border-gray-100 rounded-bl-sm'
                 }">
-                    ${escapeHtml(msg.body)}
+                    ${escapeHtml(safeBody)}
                 </div>
-                <span class="text-[10px] text-gray-400 mt-1 mx-1">${msg.time_ago || '刚刚'}</span>
+                <span class="text-[10px] text-gray-400 mt-1 mx-1">${safeTimeAgo}</span>
             </div>
         `;
         messagesArea.appendChild(div);
@@ -490,13 +491,13 @@
                 id: conversation.product.id,
                 title: conversation.product.title,
                 price: conversation.product.price,
-                image: conversation.product.image || '{{ asset('images/placeholder-product.png') }}',
+                image: conversation.product.image_url || conversation.product.image || '{{ asset('images/placeholder-product.png') }}',
             };
 
             productHeader.innerHTML = `
                 <div class="flex items-center gap-3 animate-fade-in">
                     <div class="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden">
-                        <img src="${normalizedProduct.image}" class="w-full h-full object-cover">
+                        <img src="${normalizedProduct.image}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='{{ asset('images/placeholder-product.png') }}';">
                     </div>
                     <div>
                         <div class="text-sm font-bold text-gray-900">正在沟通: ${escapeHtml(normalizedProduct.title)}</div>
@@ -540,12 +541,22 @@
                 chatItem.style.opacity = '0';
                 chatItem.style.transform = 'translateX(-20px)';
                 
+                const nextChatId = (() => {
+                    const candidates = Array.from(document.querySelectorAll('.chat-item'))
+                        .filter(item => item !== chatItem);
+                    return candidates.length ? candidates[0].dataset.chatId : null;
+                })();
+
                 setTimeout(() => {
                     chatItem.remove();
                     
-                    // If this was the current conversation, redirect to chat index
-                    if (chatId === conversationId) {
-                        window.location.href = '{{ route("chat.index") }}';
+                    if (String(chatId) === String(conversationId)) {
+                        clearInterval(pollingInterval);
+                        if (nextChatId) {
+                            window.location.href = `/chat/${nextChatId}`;
+                        } else {
+                            window.location.href = '{{ route("chat.index") }}';
+                        }
                     }
                 }, 300);
             } else {
@@ -579,7 +590,7 @@
                 'id' => $conversation->product->id,
                 'title' => $conversation->product->title,
                 'price' => $conversation->product->price,
-                'image' => $conversation->product->image_path,
+                'image' => $conversation->product->image_url,
             ];
         }
     @endphp

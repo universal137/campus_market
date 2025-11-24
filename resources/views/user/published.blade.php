@@ -39,7 +39,7 @@
                             <div class="aspect-square bg-gray-100 overflow-hidden relative">
                                 <a href="{{ route('items.show', $product) }}" class="block w-full h-full">
                                     <img 
-                                        src="{{ $product->image ?? 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=400&fit=crop' }}" 
+                                        src="{{ $product->image_url }}" 
                                         alt="{{ $product->title }}"
                                         class="w-full h-full object-cover transition-transform duration-300 ease group-hover:scale-105"
                                     >

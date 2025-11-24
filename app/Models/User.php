@@ -166,4 +166,12 @@ class User extends Authenticatable
         // Otherwise, use Storage::url to generate the full URL
         return Storage::url($this->avatar);
     }
+
+    /**
+     * Determine whether the user has completed student verification.
+     */
+    public function getIsVerifiedAttribute(): bool
+    {
+        return !empty($this->student_id) && !empty($this->school);
+    }
 }

@@ -157,6 +157,9 @@
                     @php
                         $isSample = !($item instanceof \App\Models\Item);
                         $itemUrl = $isSample ? '#' : route('items.show', $item);
+                        $imageSrc = $isSample
+                            ? 'https://via.placeholder.com/400x300?text=Campus+Market'
+                            : $item->image_url;
                     @endphp
                     <a href="{{ $itemUrl }}" 
                        class="group block home-card-entry opacity-0 translate-y-8 transition-all duration-700 ease-out transform"
@@ -165,7 +168,7 @@
                             <!-- Image Area -->
                             <div class="aspect-[4/3] bg-gray-100 overflow-hidden">
                                 <img 
-                                    src="{{ $item->image ?? 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=300&fit=crop' }}" 
+                                    src="{{ $imageSrc }}" 
                                     alt="{{ $item->title }}"
                                     class="w-full h-full object-cover transition-transform duration-300 ease-in-out group-hover:scale-105"
                                 >

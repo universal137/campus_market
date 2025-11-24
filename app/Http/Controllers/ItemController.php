@@ -8,7 +8,6 @@ use App\Models\User;
 use Database\Factories\ItemFactory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class ItemController extends Controller
@@ -42,6 +41,8 @@ class ItemController extends Controller
                 'category' => $hasCategoryFilter ? $categoryId : null,
                 'q' => $keyword,
             ],
+            'lat' => ['nullable', 'numeric', 'between:-90,90'],
+            'lng' => ['nullable', 'numeric', 'between:-180,180'],
         ]);
     }
 
@@ -78,9 +79,7 @@ class ItemController extends Controller
         // Handle image upload
         $imagePath = null;
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('products', 'public');
-            // Save the full URL path to the database
-            $imagePath = Storage::url($path);
+            $imagePath = $request->file('image')->store('products', 'public');
         } else {
             // Fallback to random image if no upload (should not happen with required validation)
             $imagePath = ItemFactory::getRandomImageUrl();
@@ -95,6 +94,8 @@ class ItemController extends Controller
             'deal_place' => $validated['deal_place'] ?? null,
             'image' => $imagePath,
             'status' => 'on_sale',
+            'latitude' => $request->input('lat'),
+            'longitude' => $request->input('lng'),
         ]);
 
         return back()->with('success', '已成功发布商品，感谢分享你的闲置！');

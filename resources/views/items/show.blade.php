@@ -10,18 +10,12 @@
         <div style="display:flex;flex-wrap:wrap;gap:32px;margin-top:18px;">
             <!-- 左侧：图片/宣传图 -->
             <div style="flex:1 1 260px;min-width:240px;">
-                @if($item->image)
-                    <img 
-                        src="{{ $item->image }}" 
-                        alt="{{ $item->title }}"
-                        class="w-full h-[400px] rounded-3xl shadow-lg object-cover"
-                        style="margin-bottom:14px;"
-                    >
-                @else
-                    <div class="w-full h-[400px] rounded-3xl shadow-lg bg-gray-100 flex items-center justify-center text-gray-400 text-sm" style="margin-bottom:14px;">
-                        商品图片占位（可在后续接入上传功能）
-                    </div>
-                @endif
+                <img 
+                    src="{{ $item->image_url }}" 
+                    alt="{{ $item->title }}"
+                    class="w-full h-[400px] rounded-3xl shadow-lg object-cover"
+                    style="margin-bottom:14px;"
+                >
             </div>
 
             <!-- 右侧：关键信息 + 卖家信息 + 操作按钮 -->
@@ -73,6 +67,23 @@
                 <div style="color:#334155;font-size:14px;line-height:1.8;white-space:pre-line;">
                     {{ $item->description }}
                 </div>
+
+                @if($item->latitude && $item->longitude)
+                    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-4" style="margin-top:12px;">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center gap-2 text-gray-900 font-semibold">
+                                <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c-1.105 0-2-.9-2-2 0-1.105.895-2 2-2s2 .895 2 2-.895 2-2 2zm0-9C8.134 2 5 5.134 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.866-3.134-7-7-7z"/>
+                                </svg>
+                                交易地点
+                            </div>
+                            @if($item->deal_place)
+                                <span class="text-sm text-gray-500">{{ $item->deal_place }}</span>
+                            @endif
+                        </div>
+                        <div id="static-map" class="h-48 w-full rounded-xl overflow-hidden z-0"></div>
+                    </div>
+                @endif
 
                 <!-- 底部操作栏（可做成悬浮） -->
                 <div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:10px;">
@@ -340,5 +351,50 @@
         }
     </script>
 @endsection
+
+@if($item->latitude && $item->longitude)
+    @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                if (typeof L === 'undefined') {
+                    return;
+                }
+
+                const mapContainer = document.getElementById('static-map');
+                if (!mapContainer) {
+                    return;
+                }
+
+                const coordinates = [{{ $item->latitude }}, {{ $item->longitude }}];
+
+                const map = L.map(mapContainer, {
+                    center: coordinates,
+                    zoom: 16,
+                    dragging: false,
+                    scrollWheelZoom: false,
+                    doubleClickZoom: false,
+                    boxZoom: false,
+                    keyboard: false,
+                    zoomControl: false,
+                    tap: false
+                });
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 18,
+                    attribution: '&copy; OpenStreetMap contributors'
+                }).addTo(map);
+
+                L.circleMarker(coordinates, {
+                    radius: 10,
+                    color: '#ef4444',
+                    fillColor: '#ef4444',
+                    fillOpacity: 0.9
+                }).addTo(map);
+
+                setTimeout(() => map.invalidateSize(), 200);
+            });
+        </script>
+    @endpush
+@endif
 
 

@@ -4,14 +4,24 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class Item extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'category_id', 'title', 'description',
-        'price', 'deal_place', 'image', 'status',
+        'user_id',
+        'category_id',
+        'title',
+        'description',
+        'price',
+        'deal_place',
+        'image',
+        'status',
+        'latitude',
+        'longitude',
     ];
 
     public function user()
@@ -62,5 +72,44 @@ class Item extends Model
     public function conversations()
     {
         return $this->hasMany(Conversation::class, 'product_id');
+    }
+
+    /**
+     * Get a normalized image URL regardless of storage format.
+     */
+    public function getImageUrlAttribute(): string
+    {
+        $path = $this->image_path ?? $this->image;
+
+        if (empty($path)) {
+            return 'https://via.placeholder.com/400x300?text=No+Image';
+        }
+
+        $appHost = parse_url(config('app.url'), PHP_URL_HOST);
+
+        if (Str::startsWith($path, ['http://', 'https://'])) {
+            $pathHost = parse_url($path, PHP_URL_HOST);
+
+            if (!$pathHost || ($appHost && $pathHost === $appHost)) {
+                $path = parse_url($path, PHP_URL_PATH) ?: $path;
+            } else {
+                return $path;
+            }
+        }
+
+        $normalizedPath = ltrim($path, '/');
+        $publicPrefix = 'storage/';
+
+        if (Str::startsWith($normalizedPath, $publicPrefix)) {
+            $storageRelative = Str::after($normalizedPath, $publicPrefix);
+        } else {
+            $storageRelative = $normalizedPath;
+        }
+
+        if (Storage::disk('public')->exists($storageRelative)) {
+            return asset($publicPrefix . $storageRelative);
+        }
+
+        return 'https://via.placeholder.com/400x300?text=No+Image';
     }
 }

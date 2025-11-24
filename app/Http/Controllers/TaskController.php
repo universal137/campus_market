@@ -59,6 +59,8 @@ class TaskController extends Controller
             'title' => ['required', 'string', 'max:120'],
             'content' => ['required', 'string', 'max:2000'],
             'reward' => ['nullable', 'string', 'max:60'],
+            'lat' => ['nullable', 'numeric', 'between:-90,90'],
+            'lng' => ['nullable', 'numeric', 'between:-180,180'],
         ]);
 
         $user = User::firstOrCreate(
@@ -83,6 +85,8 @@ class TaskController extends Controller
             'content' => $validated['content'],
             'reward' => $reward ?? '面议',
             'status' => 'open',
+            'latitude' => $request->input('lat'),
+            'longitude' => $request->input('lng'),
         ]);
 
         return back()->with('success', '互助任务已发布，耐心等待同学来接单吧！');

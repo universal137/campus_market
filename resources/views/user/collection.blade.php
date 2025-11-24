@@ -72,7 +72,7 @@
                                 <div class="aspect-[4/3] bg-gray-100 overflow-hidden relative">
                                     <a href="{{ route('items.show', $item) }}" class="block w-full h-full">
                                         <img 
-                                            src="{{ $item->image ?? 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=300&fit=crop' }}" 
+                                            src="{{ $item->image_url }}" 
                                             alt="{{ $item->title }}"
                                             class="w-full h-full object-cover transition-transform duration-300 ease group-hover:scale-105"
                                         >

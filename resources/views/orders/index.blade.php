@@ -46,20 +46,12 @@
                 <div class="w-full bg-white rounded-2xl p-5 border border-gray-100 flex items-center gap-6 mb-4 hover:shadow-md transition-all duration-200" data-order-id="{{ $order->id }}" data-review-target-id="{{ $order->seller_id ?? $order->buyer_id }}">
                     <!-- Left: Product Image -->
                     <div class="flex-shrink-0">
-                        @if($order->product && $order->product->image)
-                            <img 
-                                src="{{ $order->product->image }}" 
-                                alt="{{ $order->product->title ?? '商品图片' }}"
-                                class="w-20 h-20 object-cover rounded-xl"
-                                onerror="this.src='https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=300&fit=crop'"
-                            >
-                        @else
-                            <div class="w-20 h-20 bg-gray-100 rounded-xl flex items-center justify-center">
-                                <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                            </div>
-                        @endif
+                        <img 
+                            src="{{ optional($order->product)->image_url ?? 'https://via.placeholder.com/150' }}" 
+                            alt="{{ optional($order->product)->title ?? '商品图片' }}"
+                            class="w-20 h-20 object-cover rounded-xl"
+                            onerror="this.onerror=null; this.src='https://via.placeholder.com/150';"
+                        >
                     </div>
 
                     <!-- Middle: Context Info -->
@@ -172,20 +164,12 @@
                 <div class="w-full bg-white rounded-2xl p-5 border border-gray-100 flex items-center gap-6 mb-4 hover:shadow-md transition-all duration-200" data-order-id="{{ $order->id }}" data-review-target-id="{{ $order->buyer_id ?? $order->seller_id }}">
                     <!-- Left: Product Image -->
                     <div class="flex-shrink-0">
-                        @if($order->product && $order->product->image)
-                            <img 
-                                src="{{ $order->product->image }}" 
-                                alt="{{ $order->product->title ?? '商品图片' }}"
-                                class="w-20 h-20 object-cover rounded-xl"
-                                onerror="this.src='https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=300&fit=crop'"
-                            >
-                        @else
-                            <div class="w-20 h-20 bg-gray-100 rounded-xl flex items-center justify-center">
-                                <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                            </div>
-                        @endif
+                        <img 
+                            src="{{ optional($order->product)->image_url ?? 'https://via.placeholder.com/150' }}" 
+                            alt="{{ optional($order->product)->title ?? '商品图片' }}"
+                            class="w-20 h-20 object-cover rounded-xl"
+                            onerror="this.onerror=null; this.src='https://via.placeholder.com/150';"
+                        >
                     </div>
 
                     <!-- Middle: Context Info -->

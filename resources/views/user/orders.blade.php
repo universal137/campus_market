@@ -59,7 +59,7 @@
                                     <div class="w-full md:w-48 h-48 md:h-auto flex-shrink-0 bg-gray-100 overflow-hidden">
                                         <a href="{{ route('items.show', $order->product) }}" class="block w-full h-full">
                                             <img 
-                                                src="{{ $order->product->image ?? 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=300&fit=crop' }}" 
+                                                src="{{ $order->product->image_url }}" 
                                                 alt="{{ $order->product->title }}"
                                                 class="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                                             >
@@ -176,7 +176,7 @@
                                     <div class="w-full md:w-48 h-48 md:h-auto flex-shrink-0 bg-gray-100 overflow-hidden">
                                         <a href="{{ route('items.show', $order->product) }}" class="block w-full h-full">
                                             <img 
-                                                src="{{ $order->product->image ?? 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=300&fit=crop' }}" 
+                                                src="{{ $order->product->image_url }}" 
                                                 alt="{{ $order->product->title }}"
                                                 class="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                                             >

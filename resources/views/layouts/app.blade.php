@@ -6,7 +6,9 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', '校园易 - 校园二手与互助平台')</title>
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     @stack('head')
 </head>
 <body class="bg-gray-100">
@@ -57,7 +59,7 @@
                                                 </svg>
                                             </p>
                                             <p style="margin: 4px 0 0; font-size: 13px; color: #64748b; display: flex; align-items: center; gap: 6px;">
-                                                @if(auth()->user()->student_id)
+                                                @if(auth()->user()->is_verified)
                                                     <span style="display: inline-flex; align-items: center; gap: 4px; background: #dcfce7; color: #166534; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600;">
                                                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                                             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
