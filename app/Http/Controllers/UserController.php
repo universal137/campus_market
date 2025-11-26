@@ -52,5 +52,29 @@ class UserController extends Controller
         
         return view('user.collection', compact('wishlistProducts', 'wishlistTasks'));
     }
+
+    /**
+     * Display the user's published items page.
+     * Aggregates both Published Products and Help Tasks.
+     * 
+     * @return \Illuminate\View\View
+     */
+    public function published()
+    {
+        // Fetch published products with relationships
+        $products = Auth::user()
+            ->items()
+            ->with(['category'])
+            ->latest()
+            ->get();
+
+        // Fetch published tasks with user relationship
+        $tasks = Auth::user()
+            ->tasks()
+            ->latest()
+            ->get();
+
+        return view('user.published', compact('products', 'tasks'));
+    }
 }
 

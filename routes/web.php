@@ -16,6 +16,7 @@ use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\DB;
 
 Route::get('/', function () {
@@ -172,6 +173,8 @@ Route::middleware('auth')->group(function () {
 Route::get('/tasks', [TaskController::class, 'index'])->name('tasks.index');
 Route::post('/tasks', [TaskController::class, 'store'])->name('tasks.store');
 Route::get('/tasks/{task}', [TaskController::class, 'show'])->name('tasks.show');
+Route::patch('/tasks/{task}/complete', [TaskController::class, 'markAsComplete'])->name('tasks.complete')->middleware('auth');
+Route::delete('/tasks/{task}', [TaskController::class, 'destroy'])->name('tasks.destroy')->middleware('auth');
 
 // User routes
 Route::middleware('auth')->group(function () {
@@ -216,12 +219,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/conversations/{id}', [ConversationController::class, 'getChatData'])->name('api.conversations.show');
 });
 
-Route::get('/user/published', function () {
-    $products = auth()->check() 
-        ? auth()->user()->items()->with(['category'])->latest()->get()
-        : collect();
-    return view('user.published', compact('products'));
-})->name('user.published')->middleware('auth');
+Route::get('/user/published', [UserController::class, 'published'])->name('user.published')->middleware('auth');
 
 Route::get('/user/orders', [OrderController::class, 'index'])->name('user.orders')->middleware('auth');
 Route::put('/orders/{id}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus')->middleware('auth');

@@ -71,6 +71,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the tasks that the user has published.
+     */
+    public function tasks()
+    {
+        return $this->hasMany(Task::class);
+    }
+
+    /**
      * Get the tasks that the user has wishlisted.
      */
     public function wishlistTasks()

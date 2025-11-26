@@ -53,23 +53,31 @@ class TaskController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        // Use authenticated user if available, otherwise create/find by email
+        if (auth()->check()) {
+            $user = auth()->user();
+        } else {
+            $validated = $request->validate([
+                'publisher_name' => ['required', 'string', 'max:50'],
+                'publisher_email' => ['required', 'email', 'max:255'],
+            ]);
+
+            $user = User::firstOrCreate(
+                ['email' => $validated['publisher_email']],
+                [
+                    'name' => $validated['publisher_name'],
+                    'password' => bcrypt('campus-demo'),
+                ]
+            );
+        }
+
         $validated = $request->validate([
-            'publisher_name' => ['required', 'string', 'max:50'],
-            'publisher_email' => ['required', 'email', 'max:255'],
             'title' => ['required', 'string', 'max:120'],
             'content' => ['required', 'string', 'max:2000'],
             'reward' => ['nullable', 'string', 'max:60'],
             'lat' => ['nullable', 'numeric', 'between:-90,90'],
             'lng' => ['nullable', 'numeric', 'between:-180,180'],
         ]);
-
-        $user = User::firstOrCreate(
-            ['email' => $validated['publisher_email']],
-            [
-                'name' => $validated['publisher_name'],
-                'password' => bcrypt('campus-demo'),
-            ]
-        );
 
         $reward = $validated['reward'] ?? null;
         if (is_string($reward)) {
@@ -90,6 +98,36 @@ class TaskController extends Controller
         ]);
 
         return back()->with('success', '互助任务已发布，耐心等待同学来接单吧！');
+    }
+
+    public function markAsComplete(Task $task): \Illuminate\Http\JsonResponse
+    {
+        // Check if user owns the task
+        if (auth()->id() !== $task->user_id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $task->update(['status' => 'completed']);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => '任务已标记为已完成'
+        ]);
+    }
+
+    public function destroy(Task $task): \Illuminate\Http\JsonResponse
+    {
+        // Check if user owns the task
+        if (auth()->id() !== $task->user_id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $task->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => '任务已删除'
+        ]);
     }
 }
 
