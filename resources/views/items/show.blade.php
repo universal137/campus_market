@@ -4,7 +4,11 @@
 
 @section('content')
     <section class="surface">
-        <a href="{{ route('items.index') }}" style="font-size:13px;color:#64748b;text-decoration:none;">
+        <a 
+            href="{{ route('items.index') }}"
+            style="font-size:13px;color:#64748b;text-decoration:none;"
+            onclick="if (document.referrer && document.referrer.includes(window.location.host)) { history.back(); return false; }"
+        >
             ← 返回全部闲置
         </a>
         <div style="display:flex;flex-wrap:wrap;gap:32px;margin-top:18px;">

@@ -65,7 +65,13 @@
             </div>
             <div class="flex items-center gap-2">
                 <a href="{{ route('items.show', $conversation->product->id) }}" class="px-4 py-1.5 bg-blue-50 text-blue-600 text-xs rounded-full font-bold hover:bg-blue-100 transition">查看详情</a>
-                <button id="open-cashier-btn" type="button" onclick="openPaymentModal({{ $conversation->product->id }})" class="px-5 py-2 rounded-full bg-black text-white text-xs font-semibold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition active:scale-[0.98]">立即购买</button>
+                @if($conversation->product->status === 'active')
+                    <button onclick="openPaymentModal({{ $conversation->product->id }})" class="px-4 py-1.5 bg-blue-600 text-white text-xs rounded-full font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-200">立即购买</button>
+                @elseif($conversation->product->status === 'pending')
+                    <button disabled class="px-4 py-1.5 bg-orange-100 text-orange-600 text-xs rounded-full font-bold cursor-not-allowed">交易进行中</button>
+                @else
+                    <button disabled class="px-4 py-1.5 bg-gray-100 text-gray-400 text-xs rounded-full font-bold cursor-not-allowed">已售出</button>
+                @endif
             </div>
             @endif
         </div>
@@ -216,7 +222,7 @@
         const safeTimeAgo = (msg.time_ago && msg.time_ago !== 'undefined')
             ? msg.time_ago
             : (msg.created_at ? new Date(msg.created_at).toLocaleString('zh-CN', { hour12: false }) : '刚刚');
-
+        
         // Avatar Logic
         let avatarHtml = '';
         if (!isMe) {
@@ -492,7 +498,18 @@
                 title: conversation.product.title,
                 price: conversation.product.price,
                 image: conversation.product.image_url || conversation.product.image || '{{ asset('images/placeholder-product.png') }}',
+                status: conversation.product.status || 'active',
             };
+
+            const purchaseButton = (() => {
+                if (normalizedProduct.status === 'active') {
+                    return `<button type="button" class="px-4 py-1.5 bg-blue-600 text-white text-xs rounded-full font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-200" onclick="openPaymentModal(${normalizedProduct.id})">立即购买</button>`;
+                }
+                if (normalizedProduct.status === 'pending') {
+                    return '<button disabled class="px-4 py-1.5 bg-orange-100 text-orange-600 text-xs rounded-full font-bold cursor-not-allowed">交易进行中</button>';
+                }
+                return '<button disabled class="px-4 py-1.5 bg-gray-100 text-gray-400 text-xs rounded-full font-bold cursor-not-allowed">已售出</button>';
+            })();
 
             productHeader.innerHTML = `
                 <div class="flex items-center gap-3 animate-fade-in">
@@ -506,7 +523,7 @@
                 </div>
                 <div class="flex items-center gap-2 animate-fade-in">
                     <a href="/items/${normalizedProduct.id}" class="px-4 py-1.5 bg-blue-50 text-blue-600 text-xs rounded-full font-bold hover:bg-blue-100 transition">查看详情</a>
-                    <button type="button" class="px-5 py-2 rounded-full bg-black text-white text-xs font-semibold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition active:scale-[0.98]" onclick="openPaymentModal(${normalizedProduct.id})">立即购买</button>
+                    ${purchaseButton}
                 </div>
             `;
             updateCashierProductDetails(normalizedProduct);
@@ -546,7 +563,7 @@
                         .filter(item => item !== chatItem);
                     return candidates.length ? candidates[0].dataset.chatId : null;
                 })();
-
+                
                 setTimeout(() => {
                     chatItem.remove();
                     
@@ -555,7 +572,7 @@
                         if (nextChatId) {
                             window.location.href = `/chat/${nextChatId}`;
                         } else {
-                            window.location.href = '{{ route("chat.index") }}';
+                        window.location.href = '{{ route("chat.index") }}';
                         }
                     }
                 }, 300);
@@ -673,7 +690,7 @@
     async function submitPayment() {
         if (paymentInFlight) return;
         if (!activeProductId) {
-            alert('未找到商品信息，请刷新页面后重试');
+            showToast('未找到商品信息，请刷新页面后重试');
             return;
         }
         paymentInFlight = true;
@@ -701,7 +718,8 @@
                 throw new Error(result.message || '支付失败，请稍后再试');
             }
         } catch (error) {
-            alert(error.message);
+            showToast(error.message || '支付失败，请稍后再试', 'error');
+            triggerModalShake();
         } finally {
             paymentInFlight = false;
             confirmPaymentBtn.disabled = false;
@@ -735,6 +753,35 @@
     });
 
     confirmPaymentBtn?.addEventListener('click', submitPayment);
+
+    let toastTimeout = null;
+    function showToast(message, type = 'error') {
+        if (!message) return;
+        if (toastTimeout) {
+            clearTimeout(toastTimeout);
+        }
+        let toast = document.getElementById('global-toast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'global-toast';
+            toast.className = 'fixed bottom-10 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-full text-sm font-semibold text-white shadow-xl backdrop-blur bg-black/90 flex items-center gap-2 opacity-0 transition-all duration-300';
+            document.body.appendChild(toast);
+        }
+        toast.textContent = message;
+        toast.classList.remove('opacity-0', 'translate-y-4');
+        toast.classList.add('opacity-100');
+        toastTimeout = setTimeout(() => {
+            toast.classList.add('opacity-0', 'translate-y-4');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    function triggerModalShake() {
+        if (!cashierCard) return;
+        cashierCard.classList.remove('animate-shake');
+        void cashierCard.offsetWidth;
+        cashierCard.classList.add('animate-shake');
+    }
 </script>
 
 <style>
@@ -877,6 +924,17 @@
 
     @keyframes drawCheck {
         to { stroke-dashoffset: 0; }
+    }
+
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        20% { transform: translateX(-6px); }
+        40% { transform: translateX(6px); }
+        60% { transform: translateX(-4px); }
+        80% { transform: translateX(4px); }
+    }
+    .animate-shake {
+        animation: shake 0.4s ease;
     }
 </style>
 @endsection

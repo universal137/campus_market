@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Item;
+use App\Models\ProductView;
 use App\Models\User;
 use Database\Factories\ItemFactory;
 use Illuminate\Http\RedirectResponse;
@@ -49,6 +50,16 @@ class ItemController extends Controller
     public function show(Item $item): View
     {
         $item->load(['user', 'category']);
+
+        if (auth()->check()) {
+            ProductView::updateOrCreate(
+                [
+                    'user_id' => auth()->id(),
+                    'product_id' => $item->id,
+                ],
+                []
+            );
+        }
 
         return view('items.show', [
             'item' => $item,

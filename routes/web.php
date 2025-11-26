@@ -1,9 +1,10 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Models\Item;
-use App\Models\Task;
 use App\Models\Category;
+use App\Models\Item;
+use App\Models\ProductView;
+use App\Models\Task;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\AuthController;
@@ -13,6 +14,9 @@ use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\SettingsController;
+use Illuminate\Support\Facades\DB;
 
 Route::get('/', function () {
     // 获取所有分类
@@ -108,7 +112,49 @@ Route::get('/', function () {
         });
     }
 
-    return view('welcome', compact('categories', 'items', 'tasks'));
+    $recommendedProducts = collect();
+
+    if (auth()->check()) {
+        $userId = auth()->id();
+
+        $topCategoryIds = ProductView::query()
+            ->where('product_views.user_id', $userId)
+            ->join('items', 'product_views.product_id', '=', 'items.id')
+            ->where('items.status', 'on_sale')
+            ->select('items.category_id', DB::raw('COUNT(*) as views'), DB::raw('MAX(product_views.updated_at) as last_viewed'))
+            ->groupBy('items.category_id')
+            ->orderByDesc('views')
+            ->orderByDesc('last_viewed')
+            ->limit(2)
+            ->pluck('items.category_id');
+
+        if ($topCategoryIds->isNotEmpty()) {
+            $recommendedProducts = Item::with(['user', 'category'])
+                ->where('status', 'on_sale')
+                ->whereIn('category_id', $topCategoryIds)
+                ->where('user_id', '!=', $userId)
+                ->whereDoesntHave('orders', function ($query) use ($userId) {
+                    $query->where('buyer_id', $userId);
+                })
+                ->orderByDesc('updated_at')
+                ->take(8)
+                ->get();
+        }
+    }
+
+    if ($recommendedProducts->isEmpty()) {
+        $recommendedProducts = Item::with(['user', 'category'])
+            ->where('status', 'on_sale')
+            ->inRandomOrder()
+            ->take(8)
+            ->get();
+
+        if ($recommendedProducts->isEmpty()) {
+            $recommendedProducts = $items instanceof \Illuminate\Support\Collection ? $items : collect($items);
+        }
+    }
+
+    return view('welcome', compact('categories', 'items', 'tasks', 'recommendedProducts'));
 });
 
 Route::get('/items', [ItemController::class, 'index'])->name('items.index');
@@ -134,6 +180,10 @@ Route::middleware('auth')->group(function () {
     })->name('user.profile');
     
     Route::put('/user/profile', [AuthController::class, 'updateProfile'])->name('user.profile.update');
+
+    Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+    Route::post('/settings/password', [SettingsController::class, 'updatePassword'])->name('settings.password.update');
+    Route::post('/settings/notifications', [SettingsController::class, 'toggleNotification'])->name('settings.notifications.toggle');
     
     // Wishlist routes
     Route::get('/user/wishlist', [\App\Http\Controllers\UserController::class, 'wishlist'])->name('user.wishlist');
@@ -181,13 +231,7 @@ Route::get('/user/favorites', function () {
     return view('user.favorites');
 })->name('user.favorites');
 
-Route::get('/user/notifications', function () {
-    return view('user.notifications');
-})->name('user.notifications');
-
-Route::get('/settings', function () {
-    return view('settings');
-})->name('settings');
+    Route::get('/user/notifications', [NotificationController::class, 'index'])->name('notifications.index');
 
 // Authentication routes
 Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');

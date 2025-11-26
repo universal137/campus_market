@@ -104,7 +104,7 @@
                                             <span class="text-xs text-gray-500 block">收藏夹</span>
                                         </span>
                                     </a>
-                                    <a href="/user/notifications" class="user-dropdown__item">
+                                    <a href="{{ route('notifications.index') }}" class="user-dropdown__item">
                                         <span class="w-5 h-5 text-gray-500 flex items-center justify-center">
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 16v-5a6 6 0 1 0-12 0v5l-1.5 3h15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>
                                         </span>

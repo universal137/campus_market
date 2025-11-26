@@ -109,24 +109,37 @@
         @if($items->count() > 0)
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
                 @foreach($items as $item)
+                    @php
+                        $status = $item->status ?? 'active';
+                        $isActive = $status === 'active';
+                    @endphp
                     <div class="product-card-entry opacity-0 translate-y-8 transition-all duration-700 ease-out transform">
-                        <article class="bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm transition-all duration-300 ease hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(0,0,0,0.1)] hover:border-slate-300 relative group">
+                        <article class="bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm transition-all duration-300 ease relative group {{ $isActive ? 'hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(0,0,0,0.1)] hover:border-slate-300' : 'opacity-95' }}">
                             <!-- Image Area -->
                             <div class="aspect-[4/3] bg-gray-100 overflow-hidden relative">
                                 <a href="{{ route('items.show', $item) }}" class="block w-full h-full">
                                     <img 
                                         src="{{ $item->image_url }}" 
                                         alt="{{ $item->title }}"
-                                        class="w-full h-full object-cover transition-transform duration-300 ease group-hover:scale-105"
+                                        class="w-full h-full object-cover transition-transform duration-300 ease {{ $isActive ? 'group-hover:scale-105' : '' }} {{ $status === 'sold' ? 'grayscale' : '' }}"
                                     >
                                 </a>
+                                @if($status === 'sold')
+                                    <div class="absolute inset-0 bg-black/50 backdrop-blur-[2px] flex items-center justify-center z-10 pointer-events-none">
+                                        <span class="text-white font-semibold border-2 border-white px-4 py-1 rounded-full text-sm">已售出</span>
+                                    </div>
+                                @elseif($status === 'pending')
+                                    <div class="absolute inset-0 bg-blue-900/40 backdrop-blur-[1px] flex items-center justify-center z-10 pointer-events-none">
+                                        <span class="text-white font-semibold text-sm px-4 py-1 rounded-full">交易中</span>
+                                    </div>
+                                @endif
                                 
                                 <!-- Heart Button (Top-Right) -->
                                 @auth
                                     <button 
                                         type="button"
                                         onclick="event.preventDefault(); event.stopPropagation(); toggleWishlist({{ $item->id }}, this);"
-                                        class="absolute top-3 right-3 w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white shadow-sm flex items-center justify-center transition-all duration-200 active:scale-75 z-10 wishlist-heart-btn"
+                                        class="absolute top-3 right-3 w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white shadow-sm flex items-center justify-center transition-all duration-200 active:scale-75 z-20 wishlist-heart-btn"
                                         data-item-id="{{ $item->id }}"
                                         data-liked="{{ auth()->check() && $item->isLikedBy(auth()->user()) ? 'true' : 'false' }}"
                                     >
@@ -448,6 +461,34 @@
     </div>
 
     <script>
+        (function() {
+            const storageKey = 'marketScrollPosition';
+
+            const saveScrollPosition = () => {
+                sessionStorage.setItem(storageKey, window.scrollY.toString());
+            };
+
+            window.addEventListener('beforeunload', saveScrollPosition);
+
+            document.addEventListener('click', function(event) {
+                const target = event.target;
+                if (!target) return;
+                const card = target.closest('a');
+                if (card && card.href) {
+                    saveScrollPosition();
+                }
+            }, true);
+
+            document.addEventListener('DOMContentLoaded', function () {
+                const storedPosition = sessionStorage.getItem(storageKey);
+                if (storedPosition !== null) {
+                    setTimeout(() => {
+                        window.scrollTo(0, parseFloat(storedPosition));
+                    }, 120);
+                }
+            });
+        })();
+
         let publishMapInstance = null;
         let publishMapMarker = null;
 

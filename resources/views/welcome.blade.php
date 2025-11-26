@@ -138,6 +138,76 @@
         </div>
     </section>
 
+    @if(isset($recommendedProducts) && $recommendedProducts->count() > 0)
+        <section class="py-12 px-4">
+            <div class="max-w-6xl mx-auto">
+                <div class="mb-6">
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-900 flex items-center gap-3 mb-2">✨ 猜你喜欢</h2>
+                    <p class="text-gray-500">根据您的浏览兴趣推荐</p>
+                </div>
+                <div class="overflow-x-auto scrollbar-hide">
+                    <div class="flex gap-5 rounded-3xl">
+                        <div class="flex gap-5 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2">
+                            @foreach($recommendedProducts as $product)
+                                @php
+                                    $status = $product->status ?? 'active';
+                                    $isActive = $status === 'active';
+                                @endphp
+                                <a href="{{ route('items.show', $product) }}" class="min-w-[240px] max-w-[260px] snap-start group block opacity-0 translate-y-8 transition-all duration-700 ease-out transform recommend-card-entry">
+                                    <article class="bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm transition-all duration-300 ease-in-out flex flex-col h-full {{ $isActive ? 'hover:shadow-2xl hover:-translate-y-2' : 'opacity-95' }}">
+                                        <div class="aspect-[4/3] bg-gray-100 overflow-hidden relative">
+                                            <img src="{{ $product->image_url }}" alt="{{ $product->title }}" class="w-full h-full object-cover transition-transform duration-300 ease-in-out {{ $isActive ? 'group-hover:scale-105' : '' }} {{ $status === 'sold' ? 'grayscale' : '' }}">
+                                            @if($status === 'sold')
+                                                <div class="absolute inset-0 bg-black/50 backdrop-blur-[2px] flex items-center justify-center z-10 pointer-events-none">
+                                                    <span class="text-white font-semibold border-2 border-white px-4 py-1 rounded-full text-sm">已售出</span>
+                                                </div>
+                                            @elseif($status === 'pending')
+                                                <div class="absolute inset-0 bg-blue-900/40 backdrop-blur-[1px] flex items-center justify-center z-10 pointer-events-none">
+                                                    <span class="text-white font-semibold text-sm px-4 py-1 rounded-full">交易中</span>
+                                                </div>
+                                            @endif
+                                            <button type="button" class="absolute top-3 right-3 w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white shadow-sm flex items-center justify-center transition-all duration-200 active:scale-75 z-20">
+                                                <svg class="w-5 h-5 text-red-500" viewBox="0 0 24 24" fill="currentColor">
+                                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <div class="p-5 flex-1 flex flex-col">
+                                            <span class="inline-block px-3 py-1 text-xs font-medium text-blue-600 bg-blue-50 rounded-full mb-3 self-start">
+                                                {{ optional($product->category)->name ?? '未分类' }}
+                                            </span>
+                                            <h3 class="font-bold text-gray-900 text-lg mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors duration-200 flex-1">
+                                                {{ $product->title }}
+                                            </h3>
+                                            <div class="mb-4">
+                                                <span class="text-2xl font-bold text-red-500">¥{{ number_format($product->price, 2) }}</span>
+                                            </div>
+                                            <div class="pt-4 border-t border-gray-100 mt-auto">
+                                                <div class="flex items-center justify-between">
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-xs font-semibold">
+                                                            {{ mb_substr($product->user->name, 0, 1) }}
+                                                        </div>
+                                                        <span class="text-xs text-gray-600 font-medium">{{ $product->user->name }}</span>
+                                                    </div>
+                                                    @if($product->deal_place)
+                                                        <span class="text-xs text-gray-400 truncate max-w-[100px]">
+                                                            📍 {{ \Illuminate\Support\Str::limit($product->deal_place, 10) }}
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </article>
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    @endif
+
     <!-- Latest Items Section -->
     <section class="py-12 px-4">
         <div class="max-w-6xl mx-auto">
@@ -160,18 +230,29 @@
                         $imageSrc = $isSample
                             ? 'https://via.placeholder.com/400x300?text=Campus+Market'
                             : $item->image_url;
+                        $status = $isSample ? 'active' : ($item->status ?? 'active');
+                        $isActive = $status === 'active';
                     @endphp
                     <a href="{{ $itemUrl }}" 
                        class="group block home-card-entry opacity-0 translate-y-8 transition-all duration-700 ease-out transform"
                        @if($isSample) onclick="return false;" style="cursor: default; opacity: 0.6;" @endif>
-                        <article class="bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-2 h-full flex flex-col">
+                        <article class="bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm transition-all duration-300 ease-in-out h-full flex flex-col {{ $isActive ? 'hover:shadow-2xl hover:-translate-y-2' : 'opacity-95' }}">
                             <!-- Image Area -->
-                            <div class="aspect-[4/3] bg-gray-100 overflow-hidden">
+                            <div class="aspect-[4/3] bg-gray-100 overflow-hidden relative">
                                 <img 
                                     src="{{ $imageSrc }}" 
                                     alt="{{ $item->title }}"
-                                    class="w-full h-full object-cover transition-transform duration-300 ease-in-out group-hover:scale-105"
+                                    class="w-full h-full object-cover transition-transform duration-300 ease-in-out {{ $isActive ? 'group-hover:scale-105' : '' }} {{ $status === 'sold' ? 'grayscale' : '' }}"
                                 >
+                                @if($status === 'sold')
+                                    <div class="absolute inset-0 bg-black/50 backdrop-blur-[2px] flex items-center justify-center z-10 pointer-events-none">
+                                        <span class="text-white font-semibold border-2 border-white px-4 py-1 rounded-full text-sm">已售出</span>
+                                    </div>
+                                @elseif($status === 'pending')
+                                    <div class="absolute inset-0 bg-blue-900/40 backdrop-blur-[1px] flex items-center justify-center z-10 pointer-events-none">
+                                        <span class="text-white font-semibold text-sm px-4 py-1 rounded-full">交易中</span>
+                                    </div>
+                                @endif
                             </div>
                             
                             <!-- Content -->
