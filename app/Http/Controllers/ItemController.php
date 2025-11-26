@@ -30,7 +30,12 @@ class ItemController extends Controller
             $query->where(function ($subQuery) use ($keyword) {
                 $subQuery->where('title', 'like', "%{$keyword}%")
                     ->orWhere('description', 'like', "%{$keyword}%");
-            });
+            })
+            ->orderByRaw("CASE 
+                WHEN title LIKE ? THEN 1 
+                WHEN description LIKE ? THEN 2 
+                ELSE 3 
+            END", ["%{$keyword}%", "%{$keyword}%"]);
         }
 
         $items = $query->paginate(12)->withQueryString();

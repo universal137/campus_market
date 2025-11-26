@@ -1,6 +1,17 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $chatProduct = $conversation->product;
+    $productUiStatus = null;
+    if ($chatProduct) {
+        $productUiStatus = match ($chatProduct->status) {
+            'active', 'on_sale' => 'active',
+            'pending' => 'pending',
+            default => 'sold',
+        };
+    }
+@endphp
 <div class="h-[calc(100vh-64px)] bg-white flex overflow-hidden">
     
     <div class="w-80 border-r border-gray-100 bg-gray-50 flex flex-col shrink-0">
@@ -9,9 +20,10 @@
         </div>
         <div class="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
             @foreach($allConversations as $chat)
-                <div onclick="switchChat(event, {{ $chat['id'] }})" 
+                <div id="chat-item-{{ $chat['id'] }}"
+                     onclick="switchChat(event, {{ $chat['id'] }})" 
                      data-chat-id="{{ $chat['id'] }}"
-                     class="chat-item group relative flex items-center p-3 rounded-xl transition-all duration-200 ease-out cursor-pointer {{ $chat['id'] == $conversation->id ? 'bg-white shadow-md ring-1 ring-black/5' : 'hover:bg-white/60' }}">
+                     class="chat-item group relative flex items-center p-3 rounded-xl transition-all duration-500 ease-out cursor-pointer {{ $chat['id'] == $conversation->id ? 'bg-white shadow-md ring-1 ring-black/5' : 'hover:bg-white/60' }}">
                     
                     <div class="shrink-0">
                         @if(isset($chat['other_user']) && $chat['other_user'] && ($chat['other_user']->avatar_url ?? false))
@@ -37,7 +49,7 @@
                         <p class="text-xs text-gray-500 truncate mt-0.5">{{ $chat['last_message']->body ?? '开始聊天...' }}</p>
                     </div>
                     
-                    <button onclick="event.stopPropagation(); deleteChat({{ $chat['id'] }}, this)" class="absolute right-2 top-1/2 -translate-y-1/2 opacity-80 group-hover:opacity-100 transition-opacity w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-50 text-gray-400 hover:text-red-500 z-10">
+                    <button onclick="event.stopPropagation(); confirmDelete({{ $chat['id'] }})" class="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all duration-300 p-2 bg-white rounded-full shadow-md text-red-500 hover:bg-red-50 hover:scale-110 active:scale-90 cursor-pointer z-10">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                         </svg>
@@ -50,6 +62,7 @@
     <div class="flex-1 flex flex-col bg-[#F9FAFB] relative min-w-0">
         
         <div id="product-header" class="shrink-0 px-6 py-3 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between z-10">
+            <div id="chat-header-product" class="flex items-center justify-between gap-3 w-full">
             @if($conversation->product)
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden">
@@ -65,15 +78,16 @@
             </div>
             <div class="flex items-center gap-2">
                 <a href="{{ route('items.show', $conversation->product->id) }}" class="px-4 py-1.5 bg-blue-50 text-blue-600 text-xs rounded-full font-bold hover:bg-blue-100 transition">查看详情</a>
-                @if($conversation->product->status === 'active')
+                @if($productUiStatus === 'active')
                     <button onclick="openPaymentModal({{ $conversation->product->id }})" class="px-4 py-1.5 bg-blue-600 text-white text-xs rounded-full font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-200">立即购买</button>
-                @elseif($conversation->product->status === 'pending')
+                @elseif($productUiStatus === 'pending')
                     <button disabled class="px-4 py-1.5 bg-orange-100 text-orange-600 text-xs rounded-full font-bold cursor-not-allowed">交易进行中</button>
                 @else
                     <button disabled class="px-4 py-1.5 bg-gray-100 text-gray-400 text-xs rounded-full font-bold cursor-not-allowed">已售出</button>
                 @endif
             </div>
             @endif
+            </div>
         </div>
 
         <div id="messages-area" class="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth">
@@ -175,13 +189,49 @@
 </div>
 @endif
 
+<div id="deleteModal" class="fixed inset-0 z-[9999] hidden flex items-center justify-center">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeDeleteModal()"></div>
+    <div id="deleteCard" class="relative bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm transform transition-all duration-300 scale-95 opacity-0">
+        <div class="w-14 h-14 rounded-full bg-red-50 text-red-500 flex items-center justify-center mx-auto mb-4">
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+        </div>
+        <h3 class="text-xl font-bold text-gray-900 text-center mb-2">删除对话？</h3>
+        <p class="text-sm text-gray-500 text-center mb-6">删除后将无法恢复。</p>
+        <div class="flex items-center gap-3">
+            <button onclick="closeDeleteModal()" class="flex-1 py-3 rounded-full border border-gray-200 text-gray-600 font-semibold hover:bg-gray-50 transition">取消</button>
+            <button onclick="executeDelete()" class="flex-1 py-3 rounded-full bg-red-500 text-white font-semibold hover:bg-red-600 transition">删除</button>
+        </div>
+    </div>
+</div>
+<div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-sm font-semibold px-4 py-2 rounded-full shadow-lg opacity-0 pointer-events-none transition-all duration-300 translate-y-2"></div>
+
 <script>
     let conversationId = {{ $conversation->id }};
     const currentUserId = {{ auth()->id() }};
     const messagesArea = document.getElementById('messages-area');
     const input = document.getElementById('message-input');
     const productHeader = document.getElementById('product-header');
+    const deleteModal = document.getElementById('deleteModal');
+    const deleteCard = document.getElementById('deleteCard');
+    const toastBar = document.getElementById('toast');
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
+    let targetDeleteId = null;
+    let toastTimer = null;
+    @php
+        $initialProductDataPayload = $conversation->product ? [
+            'id' => $conversation->product->id,
+            'title' => $conversation->product->title,
+            'price' => $conversation->product->price,
+            'image_url' => $conversation->product->image_url ?? $conversation->product->image,
+            'status' => $productUiStatus ?? 'active',
+        ] : null;
+    @endphp
+    const initialProductData = @json($initialProductDataPayload);
     let pollingInterval = null;
+
+    renderHeader(initialProductData);
 
     // Escape HTML helper
     function escapeHtml(text) {
@@ -208,6 +258,10 @@
                     appendMessage(msg);
                 });
                 scrollToBottom();
+            }
+
+            if (data.conversation && data.conversation.product) {
+                renderHeader(data.conversation.product);
             }
         })
         .catch(err => {
@@ -489,10 +543,47 @@
             });
     }
 
+    function renderHeader(product) {
+        const headerContainer = document.getElementById('chat-header-product');
+        if (!productHeader || !headerContainer) return;
+
+        if (!product) {
+            headerContainer.innerHTML = '';
+            productHeader.style.display = 'none';
+            return;
+        }
+
+        const imageSrc = product.image_url || product.image || '{{ asset('images/placeholder-product.png') }}';
+        const status = product.status || 'active';
+        console.log('Product Status:', status);
+        let btnHtml = '';
+        if (status === 'active') {
+            btnHtml = `<button onclick="openPaymentModal(${product.id})" class="px-4 py-1.5 bg-blue-600 text-white text-xs rounded-full font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-200">立即购买</button>`;
+        } else if (status === 'pending') {
+            btnHtml = `<button disabled class="px-4 py-1.5 bg-orange-100 text-orange-600 text-xs rounded-full font-bold cursor-not-allowed">交易进行中</button>`;
+        } else {
+            btnHtml = `<button disabled class="px-4 py-1.5 bg-gray-100 text-gray-400 text-xs rounded-full font-bold cursor-not-allowed">已售出</button>`;
+        }
+
+        headerContainer.innerHTML = `
+            <div class="flex items-center gap-3">
+                <img src="${imageSrc}" class="w-10 h-10 rounded-lg object-cover bg-gray-100" onerror="this.onerror=null; this.src='{{ asset('images/placeholder-product.png') }}';">
+                <div>
+                    <div class="text-sm font-bold text-gray-900">正在沟通: ${escapeHtml(product.title || '')}</div>
+                    <div class="text-xs text-red-500 font-bold">¥${product.price ?? '--'}</div>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <a href="/items/${product.id}" class="px-4 py-1.5 bg-blue-50 text-blue-600 text-xs rounded-full font-bold hover:bg-blue-100 transition">查看详情</a>
+                ${btnHtml}
+            </div>
+        `;
+        productHeader.style.display = 'flex';
+    }
+
     // Update Product Header
     function updateProductHeader(conversation) {
         if (conversation && conversation.product) {
-            // API already returns formatted image path (starts with /storage/ or /images/ or full URL)
             const normalizedProduct = {
                 id: conversation.product.id,
                 title: conversation.product.title,
@@ -501,90 +592,113 @@
                 status: conversation.product.status || 'active',
             };
 
-            const purchaseButton = (() => {
-                if (normalizedProduct.status === 'active') {
-                    return `<button type="button" class="px-4 py-1.5 bg-blue-600 text-white text-xs rounded-full font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-200" onclick="openPaymentModal(${normalizedProduct.id})">立即购买</button>`;
-                }
-                if (normalizedProduct.status === 'pending') {
-                    return '<button disabled class="px-4 py-1.5 bg-orange-100 text-orange-600 text-xs rounded-full font-bold cursor-not-allowed">交易进行中</button>';
-                }
-                return '<button disabled class="px-4 py-1.5 bg-gray-100 text-gray-400 text-xs rounded-full font-bold cursor-not-allowed">已售出</button>';
-            })();
-
-            productHeader.innerHTML = `
-                <div class="flex items-center gap-3 animate-fade-in">
-                    <div class="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden">
-                        <img src="${normalizedProduct.image}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='{{ asset('images/placeholder-product.png') }}';">
-                    </div>
-                    <div>
-                        <div class="text-sm font-bold text-gray-900">正在沟通: ${escapeHtml(normalizedProduct.title)}</div>
-                        <div class="text-xs text-red-500 font-bold">¥${normalizedProduct.price}</div>
-                    </div>
-                </div>
-                <div class="flex items-center gap-2 animate-fade-in">
-                    <a href="/items/${normalizedProduct.id}" class="px-4 py-1.5 bg-blue-50 text-blue-600 text-xs rounded-full font-bold hover:bg-blue-100 transition">查看详情</a>
-                    ${purchaseButton}
-                </div>
-            `;
+            renderHeader({
+                id: normalizedProduct.id,
+                title: normalizedProduct.title,
+                price: normalizedProduct.price,
+                image_url: normalizedProduct.image,
+                status: normalizedProduct.status
+            });
             updateCashierProductDetails(normalizedProduct);
-            productHeader.style.display = 'flex';
         } else {
-            productHeader.innerHTML = '';
-            productHeader.style.display = 'none';
+            renderHeader(null);
         }
     }
 
     // Delete Chat Function
-    function deleteChat(chatId, buttonElement) {
-        if (!confirm('确定要删除这个对话吗？')) {
-            return;
+    function confirmDelete(id) {
+        targetDeleteId = id;
+        if (deleteModal && deleteCard) {
+            deleteModal.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                deleteCard.classList.remove('scale-95', 'opacity-0');
+                deleteCard.classList.add('scale-100', 'opacity-100');
+            });
         }
+    }
 
-        const chatItem = buttonElement.closest('.chat-item');
-        
-        fetch(`/conversations/${chatId}`, {
+    function closeDeleteModal(resetTarget = true) {
+        if (deleteModal && deleteCard) {
+            deleteCard.classList.add('scale-95', 'opacity-0');
+            deleteCard.classList.remove('scale-100', 'opacity-100');
+            setTimeout(() => {
+                deleteModal.classList.add('hidden');
+            }, 200);
+        }
+        if (resetTarget) {
+            targetDeleteId = null;
+        }
+    }
+
+    function executeDelete() {
+        if (!targetDeleteId) return;
+        const deleteId = targetDeleteId;
+
+        fetch(`/conversations/${deleteId}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}',
+                'X-CSRF-TOKEN': csrfToken,
                 'Accept': 'application/json'
             }
         })
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) {
+                throw new Error('网络异常，请稍后再试');
+            }
+            return res.json();
+        })
         .then(data => {
             if (data.status === 'success') {
-                // Smooth fade out animation
-                chatItem.style.transition = 'opacity 0.3s ease-out, transform 0.3s ease-out';
-                chatItem.style.opacity = '0';
-                chatItem.style.transform = 'translateX(-20px)';
-                
-                const nextChatId = (() => {
-                    const candidates = Array.from(document.querySelectorAll('.chat-item'))
-                        .filter(item => item !== chatItem);
-                    return candidates.length ? candidates[0].dataset.chatId : null;
-                })();
-                
-                setTimeout(() => {
-                    chatItem.remove();
-                    
-                    if (String(chatId) === String(conversationId)) {
-                        clearInterval(pollingInterval);
-                        if (nextChatId) {
-                            window.location.href = `/chat/${nextChatId}`;
-                        } else {
+                closeDeleteModal(false);
+                const chatItem = document.getElementById(`chat-item-${deleteId}`);
+                if (chatItem) {
+                    chatItem.style.transition = 'all 0.5s ease';
+                    chatItem.style.transform = 'translateX(-100%)';
+                    chatItem.style.opacity = '0';
+                    setTimeout(() => chatItem.remove(), 500);
+                }
+
+                if (String(deleteId) === String(conversationId)) {
+                    clearInterval(pollingInterval);
+                    const remainingChats = Array.from(document.querySelectorAll('.chat-item'))
+                        .filter(item => item.id !== `chat-item-${deleteId}`);
+                    if (remainingChats.length > 0) {
+                        window.location.href = `/chat/${remainingChats[0].dataset.chatId}`;
+                    } else {
                         window.location.href = '{{ route("chat.index") }}';
-                        }
                     }
-                }, 300);
+                }
+                targetDeleteId = null;
             } else {
-                alert('删除失败，请重试');
+                showToast(data.message || '删除失败，请重试');
             }
         })
         .catch(err => {
             console.error('Error deleting chat:', err);
-            alert('删除失败，请重试');
+            showToast(err.message || '删除失败，请重试');
         });
     }
+
+    function showToast(message) {
+        if (!toastBar) return;
+        toastBar.textContent = message;
+        toastBar.classList.remove('opacity-0', 'translate-y-2');
+        toastBar.classList.add('opacity-100', 'translate-y-0');
+        if (toastTimer) {
+            clearTimeout(toastTimer);
+        }
+        toastTimer = setTimeout(() => {
+            toastBar.classList.remove('opacity-100', 'translate-y-0');
+            toastBar.classList.add('opacity-0', 'translate-y-2');
+        }, 2500);
+    }
+
+    deleteModal?.addEventListener('click', (event) => {
+        if (event.target === deleteModal) {
+            closeDeleteModal();
+        }
+    });
 
     // Cashier Desk Logic
     const cashierModal = document.getElementById('cashier-modal');
@@ -601,15 +715,13 @@
         ? cashierProductImage.dataset.placeholder
         : "{{ asset('images/placeholder-product.png') }}";
     @php
-        $initialProductPayload = null;
-        if ($conversation->product) {
-            $initialProductPayload = [
-                'id' => $conversation->product->id,
-                'title' => $conversation->product->title,
-                'price' => $conversation->product->price,
-                'image' => $conversation->product->image_url,
-            ];
-        }
+        $initialProductPayload = $conversation->product ? [
+            'id' => $conversation->product->id,
+            'title' => $conversation->product->title,
+            'price' => $conversation->product->price,
+            'image' => $conversation->product->image_url,
+            'status' => $productUiStatus ?? 'active',
+        ] : null;
     @endphp
     const orderRedirectUrl = '/orders';
     const paymentEndpoint = "{{ route('orders.create') }}";

@@ -16,6 +16,9 @@
             <!-- Large Floating Search Bar + Primary Publish CTA -->
             <div class="flex flex-col md:flex-row items-center gap-4 mb-8">
                 <form method="GET" class="flex-1 w-full">
+                    @if(request('category'))
+                        <input type="hidden" name="category" value="{{ request('category') }}">
+                    @endif
                     <div class="relative max-w-2xl mx-auto md:mx-0">
                         <input 
                             type="text" 

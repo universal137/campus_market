@@ -3,207 +3,63 @@
 @section('title', '校园易 - 首页总览')
 
 @section('content')
-<div class="bg-[#F9FAFB] min-h-screen">
+<div id="main-content" class="bg-[#F9FAFB] min-h-screen">
     <!-- Hero Search Section -->
-    <section class="pt-16 pb-12 px-4">
-        <div class="max-w-4xl mx-auto">
-            <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 md:p-10 mb-8">
-                <div class="text-center mb-8">
-                    <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-3">🔍 想找什么？</h2>
-                    <p class="text-gray-500 text-lg">先选类型，再输入关键字，更快找到合适的闲置或技能</p>
+    <section class="py-16 px-4">
+        <div id="transition-blob" class="fixed rounded-full pointer-events-none z-[9999] transform scale-0 opacity-0 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]"></div>
+        <div class="max-w-4xl mx-auto space-y-8">
+            <div class="bg-white rounded-full h-20 shadow-[0_15px_45px_-15px_rgba(0,0,0,0.3)] border border-gray-100 px-5 flex items-center gap-4">
+                <div class="relative flex-shrink-0">
+                    <div class="w-48 bg-gray-100 rounded-full p-1 flex items-center gap-1 relative overflow-hidden">
+                        <div id="capsule-indicator" class="absolute inset-y-1 left-1 w-[calc(50%-4px)] bg-white rounded-full shadow transition-transform duration-300 ease-out"></div>
+                        <button type="button" id="capsule-market" onclick="switchSearchMode('market')" class="relative z-10 flex-1 text-sm font-semibold text-gray-700 py-2 rounded-full">📦 找闲置</button>
+                        <button type="button" id="capsule-tasks" onclick="switchSearchMode('tasks')" class="relative z-10 flex-1 text-sm font-semibold text-gray-500 py-2 rounded-full">🤝 找互助</button>
+                    </div>
                 </div>
 
-                <!-- Unified Search Bar -->
-                <form id="homepage-search-form"
-                      method="GET"
-                      action="{{ route('items.index') }}"
-                      data-item-url="{{ route('items.index') }}"
-                      data-task-url="{{ route('tasks.index') }}">
-                    <div class="relative mb-6">
-                        <div class="flex items-center bg-gray-50 rounded-full border border-gray-200 shadow-inner overflow-visible focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all duration-300">
-                            <!-- Custom Type Selector Dropdown -->
-                            <div class="relative flex-shrink-0">
-                                <!-- Hidden Input for Form Submission -->
-                                <input type="hidden" name="type" id="search_type" value="item">
-                                
-                                <!-- Trigger Button -->
-                                <button type="button" 
-                                        id="type-dropdown-trigger"
-                                        class="flex items-center gap-2 px-4 py-4 bg-gray-100 rounded-l-full text-gray-700 font-medium transition-all duration-200 ease-in-out hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                                        aria-label="选择搜索类型"
-                                        aria-expanded="false"
-                                        aria-haspopup="true">
-                                    <span id="type-display-text" class="flex items-center gap-2">
-                                        <!-- Cube Icon for Items -->
-                                        <svg id="type-display-icon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <rect x="3" y="3" width="7" height="7"></rect>
-                                            <rect x="14" y="3" width="7" height="7"></rect>
-                                            <rect x="14" y="14" width="7" height="7"></rect>
-                                            <rect x="3" y="14" width="7" height="7"></rect>
-                                        </svg>
-                                        <span id="type-display-label">找物品</span>
-                                    </span>
-                                    <!-- Chevron Down Icon -->
-                                    <svg id="type-chevron" class="w-4 h-4 transition-transform duration-200 ease-out" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <polyline points="6 9 12 15 18 9"></polyline>
-                                    </svg>
-                                </button>
-                                
-                                <!-- Dropdown Menu -->
-                                <div id="type-dropdown-menu"
-                                     class="absolute top-full left-0 mt-2 bg-white rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.2)] border border-gray-100 p-2 min-w-[180px] z-50 opacity-0 invisible -translate-y-2 scale-95 transition-all duration-200 ease-out">
-                                    <!-- Option: 找物品 -->
-                                    <button type="button"
-                                            class="dropdown-option block w-full text-left px-4 py-3 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors cursor-pointer flex items-center gap-3"
-                                            data-value="item"
-                                            data-label="找物品"
-                                            data-icon="cube">
-                                        <svg class="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <rect x="3" y="3" width="7" height="7"></rect>
-                                            <rect x="14" y="3" width="7" height="7"></rect>
-                                            <rect x="14" y="14" width="7" height="7"></rect>
-                                            <rect x="3" y="14" width="7" height="7"></rect>
-                                        </svg>
-                                        <span>找物品</span>
-                                    </button>
-                                    <!-- Option: 找服务 / 互助 -->
-                                    <button type="button"
-                                            class="dropdown-option block w-full text-left px-4 py-3 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors cursor-pointer flex items-center gap-3"
-                                            data-value="task"
-                                            data-label="找服务 / 互助"
-                                            data-icon="handshake">
-                                        <svg class="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                            <circle cx="9" cy="7" r="4"></circle>
-                                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                                        </svg>
-                                        <span>找服务 / 互助</span>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="w-px h-6 bg-gray-300"></div>
-                            <!-- Search Input -->
-                            <input id="q"
-                                   name="q"
-                                   type="text"
-                                   placeholder="例如：iPad、吉他教学、考研辅导"
-                                   aria-label="搜索关键字"
-                                   class="flex-1 px-4 py-4 bg-transparent border-none outline-none text-gray-900 placeholder-gray-400">
-                            <!-- Search Button -->
-                            <button class="flex-shrink-0 px-6 py-4 bg-blue-600 text-white font-medium transition-all duration-200 ease-in-out hover:bg-blue-700 active:scale-95" type="submit" aria-label="搜索">
-                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <circle cx="11" cy="11" r="7"></circle>
-                                    <line x1="16.65" y1="16.65" x2="21" y2="21"></line>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
+                <form id="dual-mode-form" action="{{ route('items.index') }}" method="GET" class="flex-1 flex items-center gap-4">
+                    <input type="hidden" id="dual-mode-input" name="mode" value="market">
+                    <input type="text" id="dual-search-input" name="q" class="flex-1 bg-transparent border-none focus:outline-none text-lg text-gray-900 placeholder-gray-400 transition-opacity duration-300" placeholder="搜索 iPad、教材、二手好物..." autocomplete="off">
+                    <button type="submit" id="dual-search-button" class="w-12 h-12 rounded-full text-white flex items-center justify-center shadow-lg shadow-blue-200 bg-blue-600 hover:scale-105 transition-all duration-300">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </button>
                 </form>
+            </div>
 
-                <!-- Hot Keywords Ticker -->
-                @php
-                    $hotKeywords = ['考研资料', '闲置自行车', '吉他谱', '四六级口语', '复试筹划'];
-                @endphp
-                <div class="mb-8">
-                    <div class="flex items-center gap-3 overflow-hidden">
-                        <span class="text-sm font-semibold text-gray-600 whitespace-nowrap">热搜</span>
-                        <div class="flex-1 overflow-hidden">
-                            <div class="hot-ticker__track flex gap-4 animate-scroll">
-                                @foreach(array_merge($hotKeywords, $hotKeywords) as $keyword)
-                                    <span class="text-sm text-gray-500 whitespace-nowrap">热搜：{{ $keyword }}</span>
-            @endforeach
-                            </div>
-                        </div>
-        </div>
-    </div>
-
-                <!-- Category Pills -->
-                <div>
-                    <h3 class="text-sm font-semibold text-gray-900 mb-4">或按分类快速浏览</h3>
-                    <div class="flex flex-wrap gap-3">
-                        @forelse($categories as $category)
-                            <a href="{{ route('items.index', ['category' => $category->id]) }}" 
-                               class="category-pill-entry opacity-0 translate-y-8 transition-all duration-700 ease-out transform">
-                                <span class="inline-block px-6 py-2.5 bg-gray-100 text-gray-700 rounded-full font-medium transition-all duration-200 ease-in-out hover:-translate-y-1 hover:bg-gray-200 hover:shadow-md">
-                                    {{ $category->name }}
-                                </span>
-                            </a>
-                        @empty
-                            <span class="text-gray-400 text-sm">还没有分类，执行 `php artisan db:seed` 生成示例数据</span>
-                        @endforelse
-                    </div>
-                </div>
+            <div class="relative">
+                <div class="absolute left-0 top-0 bottom-0 w-10 bg-gradient-to-r from-[#F9FAFB] to-transparent pointer-events-none"></div>
+                <div class="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-[#F9FAFB] to-transparent pointer-events-none"></div>
+                <div id="dual-hot-tags" class="flex overflow-x-auto no-scrollbar gap-3 py-2 px-2 transition-opacity duration-300"></div>
             </div>
         </div>
     </section>
 
     @if(isset($recommendedProducts) && $recommendedProducts->count() > 0)
-        <section class="py-12 px-4">
-            <div class="max-w-6xl mx-auto">
-                <div class="mb-6">
-                    <h2 class="text-3xl md:text-4xl font-bold text-gray-900 flex items-center gap-3 mb-2">✨ 猜你喜欢</h2>
-                    <p class="text-gray-500">根据您的浏览兴趣推荐</p>
-                </div>
-                <div class="overflow-x-auto scrollbar-hide">
-                    <div class="flex gap-5 rounded-3xl">
-                        <div class="flex gap-5 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2">
-                            @foreach($recommendedProducts as $product)
-                                @php
-                                    $status = $product->status ?? 'active';
-                                    $isActive = $status === 'active';
-                                @endphp
-                                <a href="{{ route('items.show', $product) }}" class="min-w-[240px] max-w-[260px] snap-start group block opacity-0 translate-y-8 transition-all duration-700 ease-out transform recommend-card-entry">
-                                    <article class="bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm transition-all duration-300 ease-in-out flex flex-col h-full {{ $isActive ? 'hover:shadow-2xl hover:-translate-y-2' : 'opacity-95' }}">
-                                        <div class="aspect-[4/3] bg-gray-100 overflow-hidden relative">
-                                            <img src="{{ $product->image_url }}" alt="{{ $product->title }}" class="w-full h-full object-cover transition-transform duration-300 ease-in-out {{ $isActive ? 'group-hover:scale-105' : '' }} {{ $status === 'sold' ? 'grayscale' : '' }}">
-                                            @if($status === 'sold')
-                                                <div class="absolute inset-0 bg-black/50 backdrop-blur-[2px] flex items-center justify-center z-10 pointer-events-none">
-                                                    <span class="text-white font-semibold border-2 border-white px-4 py-1 rounded-full text-sm">已售出</span>
-                                                </div>
-                                            @elseif($status === 'pending')
-                                                <div class="absolute inset-0 bg-blue-900/40 backdrop-blur-[1px] flex items-center justify-center z-10 pointer-events-none">
-                                                    <span class="text-white font-semibold text-sm px-4 py-1 rounded-full">交易中</span>
-                                                </div>
-                                            @endif
-                                            <button type="button" class="absolute top-3 right-3 w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white shadow-sm flex items-center justify-center transition-all duration-200 active:scale-75 z-20">
-                                                <svg class="w-5 h-5 text-red-500" viewBox="0 0 24 24" fill="currentColor">
-                                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                                                </svg>
-                                            </button>
-                                        </div>
-                                        <div class="p-5 flex-1 flex flex-col">
-                                            <span class="inline-block px-3 py-1 text-xs font-medium text-blue-600 bg-blue-50 rounded-full mb-3 self-start">
-                                                {{ optional($product->category)->name ?? '未分类' }}
-                                            </span>
-                                            <h3 class="font-bold text-gray-900 text-lg mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors duration-200 flex-1">
-                                                {{ $product->title }}
-                                            </h3>
-                                            <div class="mb-4">
-                                                <span class="text-2xl font-bold text-red-500">¥{{ number_format($product->price, 2) }}</span>
-                                            </div>
-                                            <div class="pt-4 border-t border-gray-100 mt-auto">
-                                                <div class="flex items-center justify-between">
-                                                    <div class="flex items-center gap-2">
-                                                        <div class="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-xs font-semibold">
-                                                            {{ mb_substr($product->user->name, 0, 1) }}
-                                                        </div>
-                                                        <span class="text-xs text-gray-600 font-medium">{{ $product->user->name }}</span>
-                                                    </div>
-                                                    @if($product->deal_place)
-                                                        <span class="text-xs text-gray-400 truncate max-w-[100px]">
-                                                            📍 {{ \Illuminate\Support\Str::limit($product->deal_place, 10) }}
-                                                        </span>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </article>
-                                </a>
-                            @endforeach
+        <section class="py-12">
+            <div class="max-w-6xl mx-auto mb-6 px-4 flex items-center gap-2">
+                <h2 class="text-2xl font-bold text-gray-900">✨ 猜你喜欢</h2>
+                <span class="text-sm text-gray-400 bg-gray-100 px-2 py-1 rounded-full">精选推荐</span>
+            </div>
+            <div class="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-8 pt-4 px-4 no-scrollbar" style="scroll-behavior: smooth;">
+                @foreach($recommendedProducts as $product)
+                    <a href="{{ route('items.show', $product) }}" class="min-w-[280px] md:min-w-[320px] snap-center bg-white rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden group hover:shadow-[0_8px_30px_rgba(0,0,0,0.15)] transition-all duration-500 hover:-translate-y-2 animate-fade-in-up cursor-pointer">
+                        <div class="relative aspect-[4/3] overflow-hidden">
+                            <img src="{{ $product->image_url }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="{{ $product->title }}">
+                            <div class="absolute bottom-3 left-3 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-sm font-bold text-gray-900 shadow-sm">
+                                ¥{{ number_format($product->price, 2) }}
+                            </div>
                         </div>
-                    </div>
-                </div>
+                        <div class="p-5">
+                            <h3 class="font-bold text-gray-900 truncate mb-1">{{ $product->title }}</h3>
+                            <div class="flex items-center gap-2 text-xs text-gray-500">
+                                <div class="w-5 h-5 rounded-full bg-gray-200 overflow-hidden">
+                                    <img src="{{ $product->user->avatar_url ?? 'https://ui-avatars.com/api/?name=' . urlencode($product->user->name) }}" class="w-full h-full object-cover" alt="{{ $product->user->name }}">
+                                </div>
+                                <span>{{ $product->user->name }}</span>
+                            </div>
+                        </div>
+                    </a>
+                @endforeach
             </div>
         </section>
     @endif
@@ -234,7 +90,7 @@
                         $isActive = $status === 'active';
                     @endphp
                     <a href="{{ $itemUrl }}" 
-                       class="group block home-card-entry opacity-0 translate-y-8 transition-all duration-700 ease-out transform"
+                       class="group block animate-fade-in-up transition-all duration-700 ease-out transform"
                        @if($isSample) onclick="return false;" style="cursor: default; opacity: 0.6;" @endif>
                         <article class="bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm transition-all duration-300 ease-in-out h-full flex flex-col {{ $isActive ? 'hover:shadow-2xl hover:-translate-y-2' : 'opacity-95' }}">
                             <!-- Image Area -->
@@ -327,7 +183,7 @@
                         $taskUrl = $isSample ? '#' : route('tasks.show', $task);
                     @endphp
                     <a href="{{ $taskUrl }}" 
-                       class="block home-card-entry opacity-0 translate-y-8 transition-all duration-700 ease-out transform"
+                       class="block animate-fade-in-up transition-all duration-700 ease-out transform"
                        @if($isSample) onclick="return false;" style="cursor: default; opacity: 0.6;" @endif>
                         <article class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-md flex items-center justify-between gap-4">
                             <!-- Left: Avatar -->
@@ -396,12 +252,35 @@
     .line-clamp-1 {
         display: -webkit-box;
         -webkit-line-clamp: 1;
+        line-clamp: 1;
         -webkit-box-orient: vertical;
         overflow: hidden;
+    }
+    .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+    .animate-fade-in-up {
+        opacity: 0;
+        animation: fadeInUp 0.6s ease-out forwards;
+    }
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
     .line-clamp-2 {
         display: -webkit-box;
         -webkit-line-clamp: 2;
+        line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
     }
@@ -426,144 +305,114 @@
 </style>
 
 <script>
-    // Homepage Search Form Handler
-    document.addEventListener('DOMContentLoaded', function () {
-        const form = document.getElementById('homepage-search-form');
-        if (!form) {
-            return;
-        }
+    (function () {
+        const form = document.getElementById('dual-mode-form');
+        const input = document.getElementById('dual-search-input');
+        const button = document.getElementById('dual-search-button');
+        const modeInput = document.getElementById('dual-mode-input');
+        const indicator = document.getElementById('capsule-indicator');
+        const marketBtn = document.getElementById('capsule-market');
+        const taskBtn = document.getElementById('capsule-tasks');
+        const tagsWrap = document.getElementById('dual-hot-tags');
+        const blob = document.getElementById('transition-blob');
+        const mainContent = document.getElementById('main-content');
+        if (!form || !input || !button) return;
 
-        const itemUrl = form.dataset.itemUrl || form.action;
-        const taskUrl = form.dataset.taskUrl || form.dataset.itemUrl || form.action;
+        const routes = {
+            market: "{{ route('items.index') }}",
+            tasks: "{{ route('tasks.index') }}"
+        };
 
-        form.addEventListener('submit', function (event) {
-            event.preventDefault();
-
-            const typeField = form.elements.namedItem('type');
-            const keywordField = form.elements.namedItem('q');
-            const type = typeField ? (typeField.value || 'item') : 'item';
-            const keyword = keywordField ? keywordField.value.trim() : '';
-
-            const url = type === 'item' ? itemUrl : taskUrl;
-            const params = new URLSearchParams();
-            if (keyword) {
-                params.set('q', keyword);
+        const config = {
+            market: {
+                placeholder: '搜索 iPad、教材、二手好物...',
+                buttonClasses: ['bg-blue-600', 'shadow-blue-200'],
+                action: routes.market,
+                tags: ['# iPad 平板', '# 考研教材', '# 折叠自行车', '# 耳机音箱', '# Kindle', '# 宿舍小物']
+            },
+            tasks: {
+                placeholder: '搜索 代取快递、高数辅导...',
+                buttonClasses: ['bg-orange-500', 'shadow-orange-200'],
+                action: routes.tasks,
+                tags: ['# 代取快递', '# 高数辅导', '# 搬家帮手', '# PPT 美化', '# 直播助理', '# 兼职互助']
             }
+        };
 
-            window.location.href = params.toString()
-                ? `${url}?${params.toString()}`
-                : url;
-        });
+        let currentMode = 'market';
 
-        // Custom Dropdown Component Logic
-        const dropdownTrigger = document.getElementById('type-dropdown-trigger');
-        const dropdownMenu = document.getElementById('type-dropdown-menu');
-        const hiddenInput = document.getElementById('search_type');
-        const displayLabel = document.getElementById('type-display-label');
-        const displayIcon = document.getElementById('type-display-icon');
-        const chevronIcon = document.getElementById('type-chevron');
-        const dropdownOptions = document.querySelectorAll('.dropdown-option');
-
-        let isDropdownOpen = false;
-
-        // Helper function to update icon by cloning from selected option
-        function updateIcon(selectedOption) {
-            const optionIcon = selectedOption.querySelector('svg');
-            if (optionIcon && displayIcon) {
-                // Clone the innerHTML of the SVG
-                displayIcon.innerHTML = optionIcon.innerHTML;
-            }
-        }
-
-        // Toggle dropdown
-        function toggleDropdown() {
-            isDropdownOpen = !isDropdownOpen;
-            
-            if (isDropdownOpen) {
-                dropdownMenu.classList.remove('opacity-0', 'invisible', '-translate-y-2', 'scale-95');
-                dropdownMenu.classList.add('opacity-100', 'visible', 'translate-y-0', 'scale-100');
-                chevronIcon.style.transform = 'rotate(180deg)';
-                dropdownTrigger.setAttribute('aria-expanded', 'true');
-            } else {
-                dropdownMenu.classList.remove('opacity-100', 'visible', 'translate-y-0', 'scale-100');
-                dropdownMenu.classList.add('opacity-0', 'invisible', '-translate-y-2', 'scale-95');
-                chevronIcon.style.transform = 'rotate(0deg)';
-                dropdownTrigger.setAttribute('aria-expanded', 'false');
-            }
-        }
-
-        // Close dropdown
-        function closeDropdown() {
-            if (isDropdownOpen) {
-                isDropdownOpen = false;
-                dropdownMenu.classList.remove('opacity-100', 'visible', 'translate-y-0', 'scale-100');
-                dropdownMenu.classList.add('opacity-0', 'invisible', '-translate-y-2', 'scale-95');
-                chevronIcon.style.transform = 'rotate(0deg)';
-                dropdownTrigger.setAttribute('aria-expanded', 'false');
-            }
-        }
-
-        // Handle option selection
-        dropdownOptions.forEach(option => {
-            option.addEventListener('click', function() {
-                const value = this.dataset.value;
-                const label = this.dataset.label;
-
-                // Update hidden input
-                hiddenInput.value = value;
-
-                // Update display text
-                displayLabel.textContent = label;
-
-                // Update icon by cloning from selected option
-                updateIcon(this);
-
-                // Close dropdown
-                closeDropdown();
-            });
-        });
-
-        // Toggle on trigger click
-        dropdownTrigger.addEventListener('click', function(e) {
-            e.stopPropagation();
-            toggleDropdown();
-        });
-
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!dropdownTrigger.contains(e.target) && !dropdownMenu.contains(e.target)) {
-                closeDropdown();
-            }
-        });
-
-        // Close dropdown on Escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && isDropdownOpen) {
-                closeDropdown();
-            }
-        });
-
-        // Silky Smooth Staggered Fade-in Animation (Waterfall Effect)
-        const homeCards = document.querySelectorAll('.home-card-entry');
-        const categoryPills = document.querySelectorAll('.category-pill-entry');
-        
-        // Animate category pills first
-        categoryPills.forEach((pill, index) => {
+        function renderTags(list) {
+            if (!tagsWrap) return;
+            tagsWrap.classList.add('opacity-0');
             setTimeout(() => {
-                pill.classList.remove('opacity-0', 'translate-y-8');
-                pill.classList.add('opacity-100', 'translate-y-0');
-            }, index * 80); // 80ms delay between each pill
+                tagsWrap.innerHTML = list.map(tag => `
+                    <button type="button" class="bg-gray-50 hover:bg-gray-100 rounded-full px-4 py-1.5 text-sm text-gray-600 transition-colors">${tag}</button>
+                `).join('');
+                tagsWrap.classList.remove('opacity-0');
+            }, 150);
+        }
+
+        window.switchSearchMode = function (mode, force = false) {
+            if (!config[mode] || (!force && mode === currentMode)) return;
+            currentMode = mode;
+            const cfg = config[mode];
+
+            modeInput.value = mode;
+            form.action = cfg.action;
+
+            input.classList.add('opacity-0');
+            setTimeout(() => {
+                input.placeholder = cfg.placeholder;
+                input.classList.remove('opacity-0');
+            }, 150);
+
+            indicator.style.transform = mode === 'market' ? 'translateX(0)' : 'translateX(100%)';
+
+            marketBtn.classList.toggle('text-gray-900', mode === 'market');
+            marketBtn.classList.toggle('text-gray-500', mode !== 'market');
+            taskBtn.classList.toggle('text-gray-900', mode === 'tasks');
+            taskBtn.classList.toggle('text-gray-500', mode !== 'tasks');
+
+            button.classList.remove('bg-blue-600', 'bg-orange-500', 'shadow-blue-200', 'shadow-orange-200');
+            button.classList.add(...cfg.buttonClasses);
+
+            renderTags(cfg.tags);
+        };
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const query = input.value.trim();
+            const target = query ? `${form.action}?q=${encodeURIComponent(query)}` : form.action;
+
+            if (blob) {
+                const rect = button.getBoundingClientRect();
+                const size = Math.max(window.innerWidth, window.innerHeight) * 2.5;
+                blob.style.width = `${size}px`;
+                blob.style.height = `${size}px`;
+                blob.style.top = `${rect.top + rect.height / 2 - size / 2}px`;
+                blob.style.left = `${rect.left + rect.width / 2 - size / 2}px`;
+
+                blob.className = "fixed rounded-full pointer-events-none z-[9999] transform scale-0 opacity-0 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]";
+                if (currentMode === 'market') {
+                    blob.classList.add('bg-gradient-to-br', 'from-blue-500', 'to-cyan-400');
+                } else {
+                    blob.classList.add('bg-gradient-to-br', 'from-orange-400', 'to-yellow-300');
+                }
+
+                void blob.offsetWidth;
+                blob.classList.remove('scale-0', 'opacity-0');
+                blob.classList.add('scale-[300]', 'opacity-100');
+            }
+
+            if (mainContent) {
+                mainContent.classList.add('scale-95', 'opacity-0', 'transition-all', 'duration-300');
+            }
+
+            setTimeout(() => {
+                window.location.href = target;
+            }, 350);
         });
 
-        // Animate product and task cards
-        homeCards.forEach((card, index) => {
-            setTimeout(() => {
-                // Remove initial invisible state
-                card.classList.remove('opacity-0', 'translate-y-8');
-                // Add visible state
-                card.classList.add('opacity-100', 'translate-y-0');
-            }, (categoryPills.length * 80) + (index * 100)); // Start after pills, 100ms delay between each card
-        });
-    });
+        switchSearchMode('market', true);
+    })();
 </script>
 @endsection

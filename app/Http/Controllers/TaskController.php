@@ -28,7 +28,12 @@ class TaskController extends Controller
             $query->where(function ($subQuery) use ($keyword) {
                 $subQuery->where('title', 'like', "%{$keyword}%")
                     ->orWhere('content', 'like', "%{$keyword}%");
-            });
+            })
+            ->orderByRaw("CASE 
+                WHEN title LIKE ? THEN 1 
+                WHEN content LIKE ? THEN 2 
+                ELSE 3 
+            END", ["%{$keyword}%", "%{$keyword}%"]);
         }
 
         $tasks = $query->paginate(8)->withQueryString();

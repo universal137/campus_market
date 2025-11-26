@@ -142,6 +142,7 @@ class ConversationController extends Controller
                         'price' => $conversation->product->price,
                         'image' => $formatImagePath($conversation->product->image),
                         'user_id' => $conversation->product->user_id,
+                        'status' => $this->normalizeProductStatus($conversation->product->status),
                     ] : null,
                     'task' => $conversation->task ? [
                         'id' => $conversation->task->id,
@@ -244,6 +245,7 @@ class ConversationController extends Controller
                 'price' => $conversation->product->price,
                 'image' => $formatImagePath($conversation->product->image),
                 'user_id' => $conversation->product->user_id,
+                'status' => $this->normalizeProductStatus($conversation->product->status),
             ];
         } else {
             $conversationData['product'] = null;
@@ -282,6 +284,18 @@ class ConversationController extends Controller
             'conversation' => $conversationData,
             'messages' => $messages,
         ]);
+    }
+
+    /**
+     * Normalize product status so frontend can rely on unified values.
+     */
+    private function normalizeProductStatus(?string $status): string
+    {
+        return match ($status) {
+            'active', 'on_sale' => 'active',
+            'pending' => 'pending',
+            default => 'sold',
+        };
     }
 
     /**
@@ -390,6 +404,7 @@ class ConversationController extends Controller
                 'price' => $conversation->product->price,
                 'image' => $formatImagePath($conversation->product->image),
                 'user_id' => $conversation->product->user_id,
+                'status' => $this->normalizeProductStatus($conversation->product->status),
             ] : null,
             'task' => $conversation->task ? [
                 'id' => $conversation->task->id,
