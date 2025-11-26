@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Task;
 use App\Models\User;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -56,7 +55,7 @@ class TaskController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
     {
         // Use authenticated user if available, otherwise create/find by email
         if (auth()->check()) {
@@ -102,7 +101,10 @@ class TaskController extends Controller
             'longitude' => $request->input('lng'),
         ]);
 
-        return back()->with('success', '互助任务已发布，耐心等待同学来接单吧！');
+        return response()->json([
+            'status' => 'success',
+            'message' => '互助任务已发布，耐心等待同学来接单吧！'
+        ]);
     }
 
     public function markAsComplete(Task $task): \Illuminate\Http\JsonResponse

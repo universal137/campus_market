@@ -29,6 +29,33 @@
                 <div style="margin-top:4px;color:#334155;font-size:14px;line-height:1.8;white-space:pre-line;">
                     {{ $task->content }}
                 </div>
+
+                @if($task->latitude && $task->longitude)
+                <div class="mt-8 pt-8 border-t border-gray-50">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center text-xl">📍</div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">任务地点</h3>
+                            <p class="text-sm text-gray-500">{{ $task->location ?? '线下地点待确认' }}</p>
+                        </div>
+                    </div>
+
+                    <div class="relative group">
+                        <div id="task-detail-map" class="h-64 w-full rounded-2xl border border-gray-100 shadow-sm overflow-hidden"></div>
+                        <a
+                            href="https://uri.amap.com/marker?position={{ $task->longitude }},{{ $task->latitude }}&name={{ urlencode($task->location ?? $task->title) }}"
+                            target="_blank"
+                            class="absolute bottom-4 right-4 bg-white/90 backdrop-blur px-4 py-2 rounded-full shadow-md text-xs font-bold text-blue-600 flex items-center gap-2 hover:scale-105 transition"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                            去这里
+                        </a>
+                    </div>
+                </div>
+                @endif
             </div>
 
             <!-- 右侧：发布人信息 + 操作按钮 -->
@@ -156,6 +183,15 @@
         }
     </style>
 
+    @if($task->latitude && $task->longitude)
+    <script type="text/javascript">
+        window._AMapSecurityConfig = {
+            securityJsCode: '53cd5c8cddb263d94888f1f61fe08201'
+        };
+    </script>
+    <script src="https://webapi.amap.com/maps?v=2.0&key=17874d29165d98aaefcd72ca015bb493&plugin=AMap.ToolBar"></script>
+    @endif
+
     <script>
         /**
          * Toggle Wishlist with Optimistic UI Update (Supports both Products and Tasks)
@@ -249,7 +285,7 @@
         }
 
         // Initialize event listener for wishlist button
-        document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function() {
             const wishlistBtn = document.getElementById('wishlist-btn');
             if (wishlistBtn) {
                 wishlistBtn.addEventListener('click', function() {
@@ -260,6 +296,10 @@
             }
 
             // Note: Contact button now uses onclick="startChat()" function defined below
+
+            @if($task->latitude && $task->longitude)
+        initializeTaskDetailMap({{ $task->latitude }}, {{ $task->longitude }}, @json($task->location ?? $task->title));
+            @endif
         });
 
         /**
@@ -354,6 +394,37 @@
                     spinner.classList.add('hidden');
                 }
             }
+        }
+
+        function initializeTaskDetailMap(lat, lng, label) {
+            if (typeof AMap === 'undefined') {
+                console.warn('AMap SDK not loaded');
+                return;
+            }
+
+            const map = new AMap.Map('task-detail-map', {
+                zoom: 17,
+                center: [lng, lat],
+                viewMode: '3D',
+                scrollWheel: false,
+                dragEnable: true,
+                doubleClickZoom: false
+            });
+
+            const marker = new AMap.Marker({
+                position: [lng, lat],
+                title: label,
+                offset: new AMap.Pixel(-9, -30),
+                icon: new AMap.Icon({
+                    size: new AMap.Size(30, 42),
+                    image: 'https://webapi.amap.com/theme/v1.3/markers/n/mark_b.png',
+                    imageSize: new AMap.Size(30, 42)
+                })
+            });
+
+            map.add(marker);
+
+            setTimeout(() => map.resize(), 300);
         }
     </script>
 @endsection

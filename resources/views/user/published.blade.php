@@ -64,6 +64,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
                 @foreach($products as $index => $product)
                     <div 
+                        id="product-card-{{ $product->id }}"
                         class="product-card-entry opacity-0 translate-y-8 transition-all duration-700 ease-out transform"
                         style="animation-delay: {{ $index * 50 }}ms;"
                     >
@@ -120,7 +121,7 @@
                                 <!-- Delete Button -->
                                 <button 
                                     type="button"
-                                    onclick="handleDelete({{ $product->id }}, '{{ $product->title }}', this)"
+                                    onclick="askDelete('product', {{ $product->id }})"
                                     class="flex-1 flex items-center justify-center gap-2 py-3 px-4 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors duration-200"
                                 >
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -241,7 +242,7 @@
                                             <!-- Delete Button -->
                                             <button 
                                                 type="button"
-                                                onclick="deleteTask({{ $task->id }}, '{{ $task->title }}', this)"
+                                                onclick="askDelete('task', {{ $task->id }})"
                                                 class="flex items-center gap-2 text-sm font-medium text-red-600 hover:text-red-700 transition-colors"
                                             >
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -435,6 +436,8 @@
     let productMapMarker = null;
     let taskModalMapInstance = null;
     let taskModalMarker = null;
+    let deleteType = null;
+    let deleteId = null;
     /**
      * Switch between Products and Tasks tabs
      */
@@ -469,59 +472,78 @@
         }
     }
 
-    /**
-     * Handle Delete Action for Products
-     */
-    function handleDelete(productId, productTitle, buttonElement) {
-        if (!confirm(`确定要删除商品"${productTitle}"吗？\n\n此操作无法撤销。`)) {
+    function askDelete(type, id) {
+        deleteType = type;
+        deleteId = id;
+        const modal = document.getElementById('deleteModal');
+        const modalCard = modal.querySelector('.delete-modal-card');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        setTimeout(() => {
+            modalCard.classList.remove('scale-95', 'opacity-0');
+            modalCard.classList.add('scale-100', 'opacity-100');
+        }, 10);
+    }
+
+    function closeDeleteModal() {
+        const modal = document.getElementById('deleteModal');
+        const modalCard = modal.querySelector('.delete-modal-card');
+        modalCard.classList.remove('scale-100', 'opacity-100');
+        modalCard.classList.add('scale-95', 'opacity-0');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }, 180);
+    }
+
+    function confirmDelete() {
+        if (!deleteType || !deleteId) {
             return;
         }
-
-        const originalContent = buttonElement.innerHTML;
-        buttonElement.disabled = true;
-        buttonElement.innerHTML = `
-            <svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-            </svg>
-            删除中...
-        `;
-
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
                          document.querySelector('input[name="_token"]')?.value;
+        const endpoint = deleteType === 'product' ? `/items/${deleteId}` : `/tasks/${deleteId}`;
+        const card = document.getElementById(`${deleteType}-card-${deleteId}`);
 
-        fetch(`/items/${productId}`, {
+        fetch(endpoint, {
             method: 'DELETE',
             headers: {
-                'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
             }
         })
         .then(response => {
-            if (response.ok) {
-                return response.json();
+            if (!response.ok) {
+                return response.text().then(text => { throw new Error(text || '删除失败'); });
             }
-            throw new Error('删除失败');
+            return response.json();
         })
-        .then(data => {
-            const card = buttonElement.closest('.product-card-entry');
-            card.style.transition = 'opacity 0.3s ease-out, transform 0.3s ease-out';
-            card.style.opacity = '0';
-            card.style.transform = 'translateY(-20px) scale(0.95)';
-            
-            setTimeout(() => {
-                card.remove();
-                const grid = document.querySelector('#view-products .grid');
-                if (grid && grid.children.length === 0) {
-                    location.reload();
-                }
-            }, 300);
+        .then(() => {
+            closeDeleteModal();
+            if (card) {
+                card.style.transition = 'transform 0.5s ease, opacity 0.5s ease, margin 0.5s ease';
+                card.style.transform = 'scale(0.9) translateY(-20px)';
+                card.style.opacity = '0';
+                card.style.marginBottom = '-100px';
+                setTimeout(() => {
+                    card.remove();
+                    const gridSelector = deleteType === 'product' ? '#view-products .grid' : '#view-tasks .grid';
+                    const grid = document.querySelector(gridSelector);
+                    if (grid && grid.children.length === 0) {
+                        location.reload();
+                    }
+                }, 500);
+            }
         })
         .catch(error => {
-            console.error('Error deleting product:', error);
-            alert('删除失败，请重试');
-            buttonElement.disabled = false;
-            buttonElement.innerHTML = originalContent;
+            console.error('Delete failed:', error);
+            alert('删除失败，请稍后重试');
+            closeDeleteModal();
+        })
+        .finally(() => {
+            deleteType = null;
+            deleteId = null;
         });
     }
 
@@ -661,62 +683,6 @@
             // Reset button state on error
             btnElement.disabled = false;
             btnElement.innerHTML = originalContent;
-        });
-    }
-
-    /**
-     * Delete Task
-     */
-    function deleteTask(taskId, taskTitle, buttonElement) {
-        if (!confirm(`确定要删除任务"${taskTitle}"吗？\n\n此操作无法撤销。`)) {
-            return;
-        }
-
-        const originalContent = buttonElement.innerHTML;
-        buttonElement.disabled = true;
-        buttonElement.innerHTML = `
-            <svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-            </svg>
-            删除中...
-        `;
-
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
-                         document.querySelector('input[name="_token"]')?.value;
-
-        fetch(`/tasks/${taskId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json'
-            }
-        })
-        .then(response => {
-            if (response.ok) {
-                return response.json();
-            }
-            throw new Error('删除失败');
-        })
-        .then(data => {
-            const card = buttonElement.closest('.task-card-entry');
-            card.style.transition = 'opacity 0.3s ease-out, transform 0.3s ease-out';
-            card.style.opacity = '0';
-            card.style.transform = 'translateY(-20px) scale(0.95)';
-            
-            setTimeout(() => {
-                card.remove();
-                const grid = document.querySelector('#view-tasks .grid');
-                if (grid && grid.children.length === 0) {
-                    location.reload();
-                }
-            }, 300);
-        })
-        .catch(error => {
-            console.error('Error deleting task:', error);
-            alert('删除失败，请重试');
-            buttonElement.disabled = false;
-            buttonElement.innerHTML = originalContent;
         });
     }
 
@@ -1060,6 +1026,36 @@
                 class="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors"
             >
                 确认结束
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Delete Modal -->
+<div id="deleteModal" class="fixed inset-0 z-[10000] hidden items-center justify-center">
+    <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" onclick="closeDeleteModal()"></div>
+    <div class="delete-modal-card relative bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 transform transition-all scale-95 opacity-0">
+        <div class="w-16 h-16 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4m0 4h.01M5.455 19h13.09a2 2 0 001.9-2.632l-4.545-12.12A2 2 0 0014.045 3H9.955a2 2 0 00-1.854 1.248L3.556 16.368A2 2 0 005.455 19z"></path>
+            </svg>
+        </div>
+        <h3 class="text-xl font-bold text-gray-900 text-center mb-2">确认删除?</h3>
+        <p class="text-center text-gray-500 mb-6">删除后将无法恢复，确认继续操作吗？</p>
+        <div class="flex gap-3">
+            <button 
+                type="button"
+                onclick="closeDeleteModal()"
+                class="flex-1 px-4 py-3 rounded-2xl bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 transition"
+            >
+                取消
+            </button>
+            <button 
+                type="button"
+                onclick="confirmDelete()"
+                class="flex-1 px-4 py-3 rounded-2xl bg-red-500 text-white font-semibold shadow-md hover:bg-red-600 transition"
+            >
+                确认删除
             </button>
         </div>
     </div>

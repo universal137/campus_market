@@ -20,6 +20,8 @@ composer install
 npm install
 ```
 
+> **给朋友的提示**：仓库依赖 Laravel 11 + MySQL。只要机器上已经安装了 PHP 8.2、Composer、Node.js、MySQL，就可以完全复刻以下步骤。所有命令默认在项目根目录执行。
+
 #### 2. 配置环境变量
 
 **Windows (PowerShell):**
@@ -105,6 +107,49 @@ php artisan serve
 ```
 
 浏览器访问 **http://127.0.0.1:8000** 即可看到概览页，顶部导航可进入 "二手交易" 与 "互助任务" 页面，支持筛选、简单发布表单（未开启正式登录，仅用于演示流程）。
+
+### 命令顺序速查（以 Windows PowerShell + MySQL 为例）
+
+```powershell
+# 1. 克隆仓库（朋友替换为自己的 GitHub 地址）
+git clone https://github.com/你的用户名/校园易.git
+cd 校园易 或 finalprojects
+
+# 2. 安装 PHP / JS 依赖
+composer install
+npm install
+
+# 3. 复制环境变量文件并修改数据库信息
+Copy-Item .env.example .env
+# 用任意编辑器把 DB_DATABASE / DB_USERNAME / DB_PASSWORD 改成自己 MySQL 的值
+
+# 4. 创建数据库（也可以用图形化工具，如 Navicat）
+mysql -u root -p -e "CREATE DATABASE campus_market CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+# 5. 生成 APP_KEY
+php artisan key:generate
+
+# 6. 执行迁移与填充示例数据
+php artisan migrate --seed
+
+# 7. 编译前端静态资源
+npm run build
+
+# 8. 启动开发服务器
+php artisan serve
+# 浏览器访问 http://127.0.0.1:8000
+```
+
+#### 9. 如果遇到问题，按顺序排查
+
+1. **确认依赖是否安装**：`composer install`、`npm install` 是否成功；  
+2. **确认 `.env`**：数据库名称、账号、密码必须与 MySQL 中实际创建的一致；  
+3. **确认数据库是否初始化**：`php artisan migrate --seed` 可一键重建表并写入示例数据；  
+4. **确认应用密钥**：若报 `APP_KEY missing`，重新执行 `php artisan key:generate`；  
+5. **确认前端资源**：若页面没有样式，重新运行 `npm run build`（或开发模式 `npm run dev`）；  
+6. **启动顺序**：建议先启动数据库，再执行 PHP 相关命令，最后 `php artisan serve` 提供访问入口。
+
+按照以上顺序执行，就能在任何 MySQL 环境（朋友的电脑）里完整跑起来。
 
 ### 常见问题
 

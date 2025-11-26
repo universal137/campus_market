@@ -2,6 +2,13 @@
 
 @section('title', '二手交易 · 校园易')
 
+<script type="text/javascript">
+    window._AMapSecurityConfig = {
+        securityJsCode: '53cd5c8cddb263d94888f1f61fe08201'
+    };
+</script>
+<script src="https://webapi.amap.com/maps?v=2.0&key=17874d29165d98aaefcd72ca015bb493&plugin=AMap.ToolBar"></script>
+
 @section('content')
     <div class="bg-[#F9FAFB] min-h-screen">
     <!-- Hero Section with Search & Filters -->
@@ -13,48 +20,39 @@
                 <p class="text-gray-500 text-lg">按照分类、关键字筛选，快速找到心仪闲置</p>
             </div>
 
-            <!-- Large Floating Search Bar + Primary Publish CTA -->
-            <div class="flex flex-col md:flex-row items-center gap-4 mb-8">
-                <form method="GET" class="flex-1 w-full">
+            <!-- Unified Search + Action Row -->
+            <div class="flex items-center gap-3 w-full max-w-4xl mx-auto mb-8 flex-col sm:flex-row">
+                <form method="GET" class="flex-1 relative w-full">
                     @if(request('category'))
                         <input type="hidden" name="category" value="{{ request('category') }}">
                     @endif
-                    <div class="relative max-w-2xl mx-auto md:mx-0">
-                        <input 
-                            type="text" 
-                            id="q" 
-                            name="q" 
-                            value="{{ $filters['q'] }}" 
-                            placeholder="搜索商品，如 iPad、计算器、教材..." 
-                            class="w-full px-6 py-4 pl-14 pr-32 text-lg rounded-full border border-gray-200 bg-white shadow-lg focus:outline-none transition-shadow duration-300 ease-in-out focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            style="display: block;"
-                        >
-                        <svg class="absolute left-5 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" 
-                             width="20" 
-                             height="20" 
-                             fill="none" 
-                             stroke="currentColor" 
-                             viewBox="0 0 24 24"
-                             style="max-width: 20px; max-height: 20px;"
-                        >
+                    <input 
+                        type="text" 
+                        id="q" 
+                        name="q" 
+                        value="{{ $filters['q'] }}" 
+                        placeholder="搜索商品，如 iPad、计算器、教材..." 
+                        class="flex-1 h-12 bg-white rounded-full shadow-sm border-0 focus:ring-2 focus:ring-blue-500 px-6 text-gray-700 w-full placeholder-gray-400"
+                    >
+                    <button 
+                        type="submit" 
+                        class="absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-md"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                         </svg>
-                        <button 
-                            type="submit" 
-                            class="absolute right-2 top-1/2 transform -translate-y-1/2 px-6 py-2 bg-blue-600 text-white rounded-full font-medium transition-all duration-200 ease-in-out hover:bg-blue-700 active:scale-95 z-10"
-                        >
-                            搜索
-                        </button>
-                    </div>
+                    </button>
                 </form>
-                <button 
-                    type="button"
-                    onclick="openPublishModal()"
-                    class="inline-flex items-center gap-2 px-6 py-4 bg-blue-600 text-white font-semibold rounded-full shadow-lg transition-transform duration-200 hover:bg-blue-700 hover:-translate-y-0.5 active:scale-95 whitespace-nowrap"
-                >
-                    <span class="w-5 h-5 flex items-center justify-center rounded-full bg-white/20">+</span>
-                    发布闲置
-                </button>
+                <div class="flex items-center gap-3 shrink-0 w-full sm:w-auto justify-center sm:justify-end">
+                    <button 
+                        type="button"
+                        onclick="openPublishModal()"
+                        class="h-12 px-6 bg-blue-600 text-white rounded-full shadow-lg font-bold flex items-center justify-center gap-2 hover:bg-blue-700 hover:-translate-y-0.5 transition-all"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        发布闲置
+                    </button>
+                </div>
             </div>
 
             <!-- Horizontal Scrollable Category Pills -->
@@ -432,7 +430,7 @@
                 <div class="space-y-3">
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">地图定位</label>
-                        <div id="map-picker" class="h-48 w-full rounded-2xl overflow-hidden z-0 border border-gray-200"></div>
+                        <div id="product-map" class="h-72 w-full rounded-2xl border border-gray-100 shadow-sm overflow-hidden relative z-0"></div>
                         <input type="hidden" name="lat" id="publish-lat" value="{{ old('lat') }}">
                         <input type="hidden" name="lng" id="publish-lng" value="{{ old('lng') }}">
                     </div>
@@ -492,57 +490,71 @@
             });
         })();
 
-        let publishMapInstance = null;
-        let publishMapMarker = null;
+        let productMapInstance = null;
+        let productMapMarker = null;
 
         function initializePublishMap() {
-            if (publishMapInstance) {
-                publishMapInstance.invalidateSize();
-                return;
-            }
-
-            const mapElement = document.getElementById('map-picker');
-            if (!mapElement || typeof L === 'undefined') {
-                return;
-            }
-
-            const defaultLatLng = [39.9042, 116.4074];
-            const initialLat = parseFloat(document.getElementById('publish-lat')?.value) || defaultLatLng[0];
-            const initialLng = parseFloat(document.getElementById('publish-lng')?.value) || defaultLatLng[1];
-
-            publishMapInstance = L.map(mapElement, {
-                center: [initialLat, initialLng],
-                zoom: 15,
-                dragging: true,
-                zoomControl: true
-            });
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '&copy; OpenStreetMap contributors'
-            }).addTo(publishMapInstance);
-
-            publishMapMarker = L.marker([initialLat, initialLng], {
-                draggable: true
-            }).addTo(publishMapInstance);
-
-            publishMapMarker.on('dragend', updatePublishLatLng);
-            publishMapInstance.on('click', function (event) {
-                publishMapMarker.setLatLng(event.latlng);
-                updatePublishLatLng({ target: publishMapMarker });
-            });
-
-            setTimeout(() => publishMapInstance.invalidateSize(), 150);
-        }
-
-        function updatePublishLatLng(event) {
+            const mapElement = document.getElementById('product-map');
             const latInput = document.getElementById('publish-lat');
             const lngInput = document.getElementById('publish-lng');
-            if (!latInput || !lngInput) return;
 
-            const latLng = event.target.getLatLng();
-            latInput.value = latLng.lat.toFixed(8);
-            lngInput.value = latLng.lng.toFixed(8);
+            if (!mapElement || typeof AMap === 'undefined') {
+                console.warn('AMap SDK 未加载，无法初始化地图');
+                return;
+            }
+
+            const defaultLat = parseFloat(latInput?.value) || 39.9042;
+            const defaultLng = parseFloat(lngInput?.value) || 116.4074;
+            const center = [defaultLng, defaultLat];
+
+            if (!productMapInstance) {
+                productMapInstance = new AMap.Map('product-map', {
+                    zoom: 16,
+                    center,
+                    viewMode: '3D',
+                    resizeEnable: true,
+                    scrollWheel: false,
+                    doubleClickZoom: false,
+                    dragEnable: true
+                });
+
+                productMapMarker = new AMap.Marker({
+                    position: center,
+                    draggable: true,
+                    cursor: 'move'
+                });
+
+                productMapInstance.add(productMapMarker);
+
+                productMapMarker.on('dragend', function (event) {
+                    updatePublishLatLng(event.lnglat);
+                });
+
+                productMapInstance.on('click', function (event) {
+                    productMapMarker.setPosition(event.lnglat);
+                    updatePublishLatLng(event.lnglat);
+                });
+            } else {
+                productMapInstance.setZoomAndCenter(16, center);
+                if (productMapMarker) {
+                    productMapMarker.setPosition(center);
+                }
+            }
+
+            updatePublishLatLng({ lng: center[0], lat: center[1] });
+            setTimeout(() => productMapInstance && productMapInstance.resize(), 200);
+        }
+
+        function updatePublishLatLng(lnglat) {
+            const latInput = document.getElementById('publish-lat');
+            const lngInput = document.getElementById('publish-lng');
+            if (!latInput || !lngInput || !lnglat) return;
+
+            const latValue = typeof lnglat.getLat === 'function' ? lnglat.getLat() : lnglat.lat;
+            const lngValue = typeof lnglat.getLng === 'function' ? lnglat.getLng() : lnglat.lng;
+
+            latInput.value = Number(latValue || 0).toFixed(8);
+            lngInput.value = Number(lngValue || 0).toFixed(8);
         }
 
         function openPublishModal() {
@@ -554,8 +566,8 @@
 
             setTimeout(() => {
                 initializePublishMap();
-                if (publishMapInstance) {
-                    publishMapInstance.invalidateSize();
+                if (productMapInstance) {
+                    productMapInstance.resize();
                 }
             }, 200);
         }

@@ -2,6 +2,14 @@
 
 @section('title', '互助任务 · 校园易')
 
+<script type="text/javascript">
+    // 1. Security Config (MUST be before loading the map)
+    window._AMapSecurityConfig = {
+        securityJsCode: '53cd5c8cddb263d94888f1f61fe08201'
+    };
+</script>
+<script src="https://webapi.amap.com/maps?v=2.0&key=17874d29165d98aaefcd72ca015bb493&plugin=AMap.AutoComplete,AMap.PlaceSearch,AMap.Geocoder"></script>
+
 @section('content')
 <div class="bg-[#F9FAFB] min-h-screen">
     <!-- Hero Section with Search & Action -->
@@ -13,59 +21,55 @@
                 <p class="text-gray-500 text-lg">寻找志同道合的同学一起解决问题</p>
             </div>
 
-            <!-- Search Bar & New Request Button -->
-            <div class="flex flex-col sm:flex-row gap-4 items-center justify-center mb-8">
-                <!-- Floating Search Bar -->
-                <form method="GET" class="flex-1 max-w-2xl w-full">
-                    <div class="relative">
-                        <input 
-                            type="text" 
-                            id="q" 
-                            name="q" 
-                            value="{{ $filters['q'] }}" 
-                            placeholder="搜索任务，如 代取快递、学习辅导..." 
-                            class="w-full px-6 py-4 pl-14 pr-20 text-lg rounded-full border border-gray-200 bg-white shadow-lg focus:outline-none transition-shadow duration-300 ease-in-out focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        >
-                        <svg class="absolute left-5 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" 
-                             width="20" 
-                             height="20" 
-                             fill="none" 
-                             stroke="currentColor" 
-                             viewBox="0 0 24 24"
-                        >
+            <!-- Unified Search + Action Row -->
+            <div class="flex items-center gap-3 w-full max-w-4xl mx-auto mb-8 flex-col sm:flex-row">
+                <form method="GET" class="flex-1 relative w-full">
+                    <input 
+                        type="text" 
+                        id="q" 
+                        name="q" 
+                        value="{{ $filters['q'] }}" 
+                        placeholder="搜索任务，如 代取快递、学习辅导..." 
+                        class="flex-1 h-12 bg-white rounded-full shadow-sm border-0 focus:ring-2 focus:ring-blue-500 px-6 text-gray-700 w-full placeholder-gray-400"
+                    >
+                    <button 
+                        type="submit" 
+                        class="absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-md"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                         </svg>
-                        <button 
-                            type="submit" 
-                            class="absolute right-2 top-1/2 transform -translate-y-1/2 px-6 py-2 bg-blue-600 text-white rounded-full font-medium transition-all duration-200 ease-in-out hover:bg-blue-700 active:scale-95 z-10"
+                    </button>
+                </form>
+
+                <div class="flex items-center gap-3 shrink-0 w-full sm:w-auto justify-center sm:justify-end">
+                    <form method="GET" class="hidden sm:block relative">
+                        <input type="hidden" name="q" value="{{ $filters['q'] }}">
+                        <div class="h-12 px-6 bg-white rounded-full shadow-sm text-gray-700 font-bold flex items-center justify-center hover:bg-gray-50 cursor-pointer border-0">
+                            <span>
+                                {{ $filters['status'] === 'open' ? '招募中' : ($filters['status'] === 'completed' ? '已完成' : '全部状态') }}
+                            </span>
+                        </div>
+                        <select 
+                            id="status" 
+                            name="status" 
+                            onchange="this.form.submit()"
+                            class="absolute inset-0 opacity-0 cursor-pointer"
                         >
-                            搜索
-                        </button>
-                    </div>
-                </form>
+                            <option value="">全部状态</option>
+                            <option value="open" @selected($filters['status'] === 'open')>招募中</option>
+                            <option value="completed" @selected($filters['status'] === 'completed')>已完成</option>
+                        </select>
+                    </form>
 
-                <!-- Status Filter (Hidden in search bar, shown as separate dropdown) -->
-                <form method="GET" class="hidden sm:block">
-                    <input type="hidden" name="q" value="{{ $filters['q'] }}">
-                    <select 
-                        id="status" 
-                        name="status" 
-                        onchange="this.form.submit()"
-                        class="px-6 py-4 text-lg rounded-full border border-gray-200 bg-white shadow-lg focus:outline-none transition-shadow duration-300 ease-in-out focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none cursor-pointer pr-10"
+                    <button 
+                        onclick="openPublishModal()"
+                        class="h-12 px-6 bg-blue-600 text-white rounded-full shadow-lg font-bold flex items-center justify-center gap-2 hover:bg-blue-700 hover:-translate-y-0.5 transition-all"
                     >
-                        <option value="">全部状态</option>
-                        <option value="open" @selected($filters['status'] === 'open')>招募中</option>
-                        <option value="completed" @selected($filters['status'] === 'completed')>已完成</option>
-                    </select>
-                </form>
-
-                <!-- New Request Button -->
-                <button 
-                    onclick="openPublishModal()"
-                    class="px-8 py-4 bg-blue-600 text-white text-lg font-semibold rounded-full transition-all duration-200 ease-in-out hover:bg-blue-700 active:scale-95 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 whitespace-nowrap"
-                >
-                    发布求助
-                </button>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        发布求助
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -349,103 +353,165 @@
 
 <script>
     let taskMapInstance = null;
-    let taskMapMarker = null;
+    let currentMarker = null;
+    let taskAutoComplete = null;
+    let taskPlaceSearch = null;
+    let taskGeocoder = null;
 
     function initializeTaskMap() {
-        if (taskMapInstance) {
-            taskMapInstance.invalidateSize();
-            return;
-        }
-
         const mapElement = document.getElementById('task-map');
-        if (!mapElement || typeof L === 'undefined') {
+        if (!mapElement || typeof AMap === 'undefined') {
+            console.warn('AMap SDK 未加载，无法初始化地图');
             return;
         }
 
-        const defaultLatLng = [36.061089, 103.834304]; // Lanzhou University approx
         const latInput = document.getElementById('task-lat');
         const lngInput = document.getElementById('task-lng');
-        const initialLat = parseFloat(latInput?.value) || defaultLatLng[0];
-        const initialLng = parseFloat(lngInput?.value) || defaultLatLng[1];
+        const defaultLat = parseFloat(latInput?.value) || 36.061089;
+        const defaultLng = parseFloat(lngInput?.value) || 103.834304;
+        const initialCenter = [defaultLng, defaultLat];
 
-        taskMapInstance = L.map(mapElement, {
-            center: [initialLat, initialLng],
-            zoom: 15,
-            zoomControl: true,
-            scrollWheelZoom: true
-        });
+        if (!taskMapInstance) {
+            taskMapInstance = new AMap.Map(mapElement, {
+                zoom: 17,
+                center: initialCenter,
+                viewMode: '3D',
+                resizeEnable: true
+            });
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(taskMapInstance);
+            currentMarker = new AMap.Marker({
+                position: initialCenter,
+                draggable: true,
+                cursor: 'move'
+            });
+            currentMarker.setMap(taskMapInstance);
 
-        taskMapMarker = L.marker([initialLat, initialLng], {
-            draggable: true
-        }).addTo(taskMapInstance);
+            currentMarker.on('dragend', function (event) {
+                updateTaskLatLng(event.lnglat, true);
+            });
 
-        taskMapMarker.on('dragend', function (event) {
-            const latLng = event.target.getLatLng();
-            latInput.value = latLng.lat.toFixed(8);
-            lngInput.value = latLng.lng.toFixed(8);
-        });
+            taskMapInstance.on('click', function (event) {
+                currentMarker.setPosition(event.lnglat);
+                updateTaskLatLng(event.lnglat, true);
+            });
 
-        taskMapInstance.on('click', function (event) {
-            taskMapMarker.setLatLng(event.latlng);
-            latInput.value = event.latlng.lat.toFixed(8);
-            lngInput.value = event.latlng.lng.toFixed(8);
-        });
+            taskAutoComplete = new AMap.AutoComplete({
+                input: 'location-input',
+                city: '全国',
+                citylimit: false
+            });
 
+            taskGeocoder = new AMap.Geocoder({
+                city: '全国'
+            });
+
+            taskPlaceSearch = new AMap.PlaceSearch({
+                city: '全国',
+                citylimit: false
+            });
+
+            bindTaskSearchEvents();
+        } else {
+            taskMapInstance.setZoomAndCenter(17, initialCenter);
+            currentMarker?.setPosition(initialCenter);
+            taskMapInstance.resize();
+            updateTaskLatLng({ lng: initialCenter[0], lat: initialCenter[1] }, false);
+        }
+    }
+
+    function bindTaskSearchEvents() {
         const searchButton = document.getElementById('location-search-btn');
         const locationInput = document.getElementById('location-input');
-        if (searchButton && locationInput) {
-            const performSearch = async () => {
-                const query = locationInput.value.trim();
-                if (!query) {
-                    alert('请输入要搜索的地点');
-                    return;
-                }
+        if (!searchButton || !locationInput || searchButton.dataset.bound === 'true') {
+            return;
+        }
 
-                searchButton.disabled = true;
-                searchButton.textContent = '搜索中...';
+        const runSearch = () => {
+            const keyword = locationInput.value.trim();
+            if (!keyword) {
+                alert('请输入要搜索的地点');
+                return;
+            }
+            if (!taskPlaceSearch) {
+                alert('地图初始化中，请稍后重试');
+                return;
+            }
 
-                try {
-                    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`, {
-                        headers: {
-                            'Accept-Language': 'zh-CN'
-                        }
-                    });
-                    const data = await response.json();
+            searchButton.disabled = true;
+            const originalText = searchButton.textContent;
+            searchButton.textContent = '搜索中...';
 
-                    if (Array.isArray(data) && data.length > 0) {
-                        const { lat, lon } = data[0];
-                        const target = [parseFloat(lat), parseFloat(lon)];
-                        taskMapInstance.flyTo(target, 18, { duration: 1.2 });
-                        taskMapMarker.setLatLng(target);
-                        latInput.value = target[0].toFixed(8);
-                        lngInput.value = target[1].toFixed(8);
-                    } else {
-                        alert('未找到匹配的位置，请尝试更精确的描述');
+            taskPlaceSearch.search(keyword, function (status, result) {
+                searchButton.disabled = false;
+                searchButton.textContent = originalText;
+
+                if (status === 'complete' && result.poiList && result.poiList.pois.length) {
+                    const poi = result.poiList.pois[0];
+                    if (poi.location) {
+                        focusOnLngLat(poi.location);
+                    } else if (taskGeocoder) {
+                        taskGeocoder.getLocation(poi.address || keyword, function (geoStatus, geoResult) {
+                            if (geoStatus === 'complete' && geoResult.geocodes.length) {
+                                focusOnLngLat(geoResult.geocodes[0].location);
+                            } else {
+                                alert('未找到匹配的位置，请尝试更精确的描述');
+                            }
+                        });
                     }
-                } catch (error) {
-                    console.error('Nominatim search failed:', error);
-                    alert('搜索失败，请稍后重试');
-                } finally {
-                    searchButton.disabled = false;
-                    searchButton.textContent = '搜索';
+                } else {
+                    alert('未找到匹配的位置，请尝试更精确的描述');
                 }
-            };
+            });
+        };
 
-            searchButton.addEventListener('click', performSearch);
-            locationInput.addEventListener('keydown', function (event) {
-                if (event.key === 'Enter') {
-                    event.preventDefault();
-                    performSearch();
+        searchButton.addEventListener('click', runSearch);
+        locationInput.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                runSearch();
+            }
+        });
+
+        if (taskAutoComplete) {
+            taskAutoComplete.on('select', function (event) {
+                if (event.poi && event.poi.location) {
+                    focusOnLngLat(event.poi.location);
+                } else if (event.poi && event.poi.name) {
+                    locationInput.value = event.poi.name;
+                    runSearch();
                 }
             });
         }
 
-        setTimeout(() => taskMapInstance.invalidateSize(), 200);
+        searchButton.dataset.bound = 'true';
+    }
+
+    function focusOnLngLat(lnglat) {
+        if (!lnglat || !taskMapInstance || !currentMarker) return;
+        currentMarker.setPosition(lnglat);
+        taskMapInstance.setZoomAndCenter(18, lnglat);
+        updateTaskLatLng(lnglat, true);
+    }
+
+    function updateTaskLatLng(lnglat, shouldReverse = false) {
+        const latInput = document.getElementById('task-lat');
+        const lngInput = document.getElementById('task-lng');
+        const locationInput = document.getElementById('location-input');
+        if (!latInput || !lngInput || !lnglat) return;
+
+        const latValue = typeof lnglat.getLat === 'function' ? lnglat.getLat() : lnglat.lat;
+        const lngValue = typeof lnglat.getLng === 'function' ? lnglat.getLng() : lnglat.lng;
+
+        latInput.value = Number(latValue || 0).toFixed(8);
+        lngInput.value = Number(lngValue || 0).toFixed(8);
+
+        if (shouldReverse && taskGeocoder) {
+            taskGeocoder.getAddress([lngValue, latValue], function(status, result) {
+                if (status === 'complete' && result.regeocode && locationInput) {
+                    locationInput.value = result.regeocode.formattedAddress;
+                }
+            });
+        }
     }
 
     function openPublishModal() {
@@ -457,7 +523,7 @@
         setTimeout(() => {
             initializeTaskMap();
             if (taskMapInstance) {
-                taskMapInstance.invalidateSize();
+                taskMapInstance.resize();
             }
         }, 200);
     }
@@ -506,17 +572,17 @@
                     headers: {
                         'X-CSRF-TOKEN': document.querySelector('input[name="_token"]')?.value || '{{ csrf_token() }}',
                         'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
                     },
                     body: formData,
                 })
                 .then(async (response) => {
-                    const data = await response.json();
-                    
                     if (!response.ok) {
-                        throw data;
+                        const errorText = await response.text();
+                        console.error('Task publish failed:', errorText);
+                        throw new Error(errorText || '发布失败');
                     }
-                    
-                    return data;
+                    return response.json();
                 })
                 .then((data) => {
                     // Show success animation

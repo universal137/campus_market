@@ -633,7 +633,7 @@
     function executeDelete() {
         if (!targetDeleteId) return;
         const deleteId = targetDeleteId;
-
+        
         fetch(`/conversations/${deleteId}`, {
             method: 'DELETE',
             headers: {
@@ -655,20 +655,20 @@
                 if (chatItem) {
                     chatItem.style.transition = 'all 0.5s ease';
                     chatItem.style.transform = 'translateX(-100%)';
-                    chatItem.style.opacity = '0';
+                chatItem.style.opacity = '0';
                     setTimeout(() => chatItem.remove(), 500);
                 }
-
+                    
                 if (String(deleteId) === String(conversationId)) {
-                    clearInterval(pollingInterval);
+                        clearInterval(pollingInterval);
                     const remainingChats = Array.from(document.querySelectorAll('.chat-item'))
                         .filter(item => item.id !== `chat-item-${deleteId}`);
                     if (remainingChats.length > 0) {
                         window.location.href = `/chat/${remainingChats[0].dataset.chatId}`;
-                    } else {
+                        } else {
                         window.location.href = '{{ route("chat.index") }}';
+                        }
                     }
-                }
                 targetDeleteId = null;
             } else {
                 showToast(data.message || '删除失败，请重试');
@@ -716,10 +716,10 @@
         : "{{ asset('images/placeholder-product.png') }}";
     @php
         $initialProductPayload = $conversation->product ? [
-            'id' => $conversation->product->id,
-            'title' => $conversation->product->title,
-            'price' => $conversation->product->price,
-            'image' => $conversation->product->image_url,
+                'id' => $conversation->product->id,
+                'title' => $conversation->product->title,
+                'price' => $conversation->product->price,
+                'image' => $conversation->product->image_url,
             'status' => $productUiStatus ?? 'active',
         ] : null;
     @endphp
