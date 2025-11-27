@@ -77,7 +77,7 @@
                 </div>
             </div>
             <div class="flex items-center gap-2">
-                <a href="{{ route('items.show', $conversation->product->id) }}" class="px-4 py-1.5 bg-blue-50 text-blue-600 text-xs rounded-full font-bold hover:bg-blue-100 transition">查看详情</a>
+                <a href="{{ route('products.show', $conversation->product) }}" class="px-4 py-1.5 bg-blue-50 text-blue-600 text-xs rounded-full font-bold hover:bg-blue-100 transition">查看详情</a>
                 @if($productUiStatus === 'active')
                     <button onclick="openPaymentModal({{ $conversation->product->id }})" class="px-4 py-1.5 bg-blue-600 text-white text-xs rounded-full font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-200">立即购买</button>
                 @elseif($productUiStatus === 'pending')

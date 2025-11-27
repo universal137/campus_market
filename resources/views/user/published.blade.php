@@ -69,7 +69,7 @@
                         <article class="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm transition-all duration-300 ease hover:shadow-lg hover:-translate-y-1 relative group">
                             <!-- Image Area -->
                             <div class="aspect-square bg-gray-100 overflow-hidden relative">
-                                <a href="{{ route('items.show', $product) }}" class="block w-full h-full">
+                                <a href="{{ route('products.show', $product) }}" class="block w-full h-full">
                                     <img 
                                         src="{{ $product->image_url }}" 
                                         alt="{{ $product->title }}"
@@ -94,7 +94,7 @@
                             <!-- Info Area -->
                             <div class="p-4">
                                 <h3 class="text-base font-semibold text-gray-900 mb-2 line-clamp-2 min-h-[2.5rem]">
-                                    <a href="{{ route('items.show', $product) }}" class="hover:text-blue-600 transition-colors">
+                                    <a href="{{ route('products.show', $product) }}" class="hover:text-blue-600 transition-colors">
                                         {{ $product->title }}
                                     </a>
                                 </h3>

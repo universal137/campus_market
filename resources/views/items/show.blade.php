@@ -11,15 +11,69 @@
         >
             ← 返回全部闲置
         </a>
+        @php
+            $galleryImages = collect($item->gallery ?? [])
+                ->filter()
+                ->map(function ($path) {
+                    if (\Illuminate\Support\Str::startsWith($path, ['http://', 'https://'])) {
+                        return $path;
+                    }
+
+                    $normalized = ltrim($path, '/');
+                    if (\Illuminate\Support\Str::startsWith($normalized, 'storage/')) {
+                        return asset($normalized);
+                    }
+
+                    if (\Illuminate\Support\Facades\Storage::disk('public')->exists($normalized)) {
+                        return \Illuminate\Support\Facades\Storage::disk('public')->url($normalized);
+                    }
+
+                    return asset('storage/' . $normalized);
+                });
+
+            if ($galleryImages->isEmpty()) {
+                $galleryImages = collect([$item->image_url]);
+            }
+
+            $galleryImages = $galleryImages->values();
+        @endphp
+
         <div style="display:flex;flex-wrap:wrap;gap:32px;margin-top:18px;">
             <!-- 左侧：图片/宣传图 -->
             <div style="flex:1 1 260px;min-width:240px;">
-                <img 
-                    src="{{ $item->image_url }}" 
-                    alt="{{ $item->title }}"
-                    class="w-full h-[400px] rounded-3xl shadow-lg object-cover"
-                    style="margin-bottom:14px;"
-                >
+                <div class="relative w-full aspect-[4/3] rounded-3xl overflow-hidden group shadow-lg" style="margin-bottom:14px;">
+                    <div 
+                        id="product-gallery-track"
+                        class="flex overflow-x-auto snap-x snap-mandatory no-scrollbar w-full h-full cursor-grab active:cursor-grabbing select-none"
+                        style="will-change: scroll-position;"
+                    >
+                        @foreach($galleryImages as $index => $image)
+                            <figure 
+                                class="w-full h-full flex-shrink-0 snap-center relative"
+                                data-gallery-slide="{{ $index }}"
+                            >
+                                <img 
+                                    src="{{ $image }}" 
+                                    alt="{{ $item->title }} - 图 {{ $index + 1 }}"
+                                    draggable="false"
+                                    ondragstart="return false"
+                                    class="w-full h-full object-cover pointer-events-none transition-transform duration-700 group-hover:scale-105"
+                                >
+                            </figure>
+                        @endforeach
+                    </div>
+
+                    @if($galleryImages->count() > 1)
+                        <div class="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2">
+                            @foreach($galleryImages as $index => $image)
+                                <span 
+                                    class="gallery-dot {{ $index === 0 ? 'is-active' : '' }}"
+                                    data-gallery-dot="{{ $index }}"
+                                ></span>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
             </div>
 
             <!-- 右侧：关键信息 + 卖家信息 + 操作按钮 -->
@@ -166,9 +220,111 @@
         .wishlist-detail-btn[data-liked="true"]:hover {
             background: #fecaca !important;
         }
+        .gallery-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.55);
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 16px rgba(15, 23, 42, 0.18);
+        }
+        .gallery-dot.is-active {
+            width: 32px;
+            background: rgba(255, 255, 255, 1);
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
     </style>
 
     <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            initProductGallery();
+        });
+
+        function initProductGallery() {
+            const slider = document.getElementById('product-gallery-track');
+            if (!slider) return;
+
+            const dots = Array.from(document.querySelectorAll('[data-gallery-dot]'));
+            let isPointerDown = false;
+            let startX = 0;
+            let scrollLeft = 0;
+            let velX = 0;
+            let momentumID;
+
+            slider.addEventListener('pointerdown', (event) => {
+                isPointerDown = true;
+                slider.classList.add('cursor-grabbing');
+                cancelAnimationFrame(momentumID);
+                startX = event.clientX;
+                scrollLeft = slider.scrollLeft;
+                slider.setPointerCapture(event.pointerId);
+            });
+
+            slider.addEventListener('pointermove', (event) => {
+                if (!isPointerDown) return;
+                event.preventDefault();
+                const x = event.clientX;
+                const walk = x - startX;
+                const prevScrollLeft = slider.scrollLeft;
+                slider.scrollLeft = scrollLeft - walk;
+                velX = slider.scrollLeft - prevScrollLeft;
+            });
+
+            const endDrag = (event) => {
+                if (!isPointerDown) return;
+                isPointerDown = false;
+                slider.classList.remove('cursor-grabbing');
+                if (event.pointerId && slider.hasPointerCapture(event.pointerId)) {
+                    slider.releasePointerCapture(event.pointerId);
+                }
+                beginMomentum();
+            };
+
+            slider.addEventListener('pointerup', endDrag);
+            slider.addEventListener('pointerleave', endDrag);
+            slider.addEventListener('pointercancel', endDrag);
+
+            slider.addEventListener('scroll', () => {
+                requestAnimationFrame(updateActiveDot);
+            });
+
+            window.addEventListener('resize', updateActiveDot);
+
+            function beginMomentum() {
+                cancelAnimationFrame(momentumID);
+
+                const momentum = () => {
+                    if (Math.abs(velX) < 0.4) {
+                        velX = 0;
+                        return;
+                    }
+                    slider.scrollLeft += velX;
+                    velX *= 0.92;
+                    momentumID = requestAnimationFrame(momentum);
+                };
+
+                momentum();
+            }
+
+            function updateActiveDot() {
+                if (!dots.length) return;
+                const slideWidth = slider.clientWidth || 1;
+                const activeIndex = Math.round(slider.scrollLeft / slideWidth);
+                dots.forEach((dot, index) => {
+                    dot.classList.toggle('is-active', index === activeIndex);
+                });
+            }
+
+            updateActiveDot();
+        }
+
         /**
          * Toggle Wishlist with Optimistic UI Update (Supports both Products and Tasks)
          * @param {number} id - The item/task ID

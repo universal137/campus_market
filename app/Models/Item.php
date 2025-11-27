@@ -19,9 +19,15 @@ class Item extends Model
         'price',
         'deal_place',
         'image',
+        'image_path',
+        'gallery',
         'status',
         'latitude',
         'longitude',
+    ];
+
+    protected $casts = [
+        'gallery' => 'array',
     ];
 
     public function user()
@@ -75,14 +81,12 @@ class Item extends Model
     }
 
     /**
-     * Get a normalized image URL regardless of storage format.
+     * Normalize any stored path/URL to a publicly accessible asset.
      */
-    public function getImageUrlAttribute(): string
+    protected function resolveImagePath(?string $path): ?string
     {
-        $path = $this->image_path ?? $this->image;
-
         if (empty($path)) {
-            return 'https://via.placeholder.com/400x300?text=No+Image';
+            return null;
         }
 
         $appHost = parse_url(config('app.url'), PHP_URL_HOST);
@@ -110,6 +114,41 @@ class Item extends Model
             return asset($publicPrefix . $storageRelative);
         }
 
-        return 'https://via.placeholder.com/400x300?text=No+Image';
+        return null;
+    }
+
+    /**
+     * Get a normalized image URL regardless of storage format.
+     */
+    public function getImageUrlAttribute(): string
+    {
+        return $this->resolveImagePath($this->image_path ?? $this->image)
+            ?? 'https://via.placeholder.com/400x300?text=No+Image';
+    }
+
+    /**
+     * Get resolved gallery URLs with fallback to thumbnail.
+     *
+     * @return array<int, string>
+     */
+    public function getGalleryUrlsAttribute(): array
+    {
+        $gallery = collect($this->gallery ?? [])
+            ->map(fn ($path) => $this->resolveImagePath($path))
+            ->filter()
+            ->values();
+
+        if ($gallery->isEmpty()) {
+            $fallback = $this->resolveImagePath($this->image_path ?? $this->image);
+            if ($fallback) {
+                $gallery->push($fallback);
+            }
+        }
+
+        if ($gallery->isEmpty()) {
+            $gallery->push('https://via.placeholder.com/400x300?text=No+Image');
+        }
+
+        return $gallery->all();
     }
 }

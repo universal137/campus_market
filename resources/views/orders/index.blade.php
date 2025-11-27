@@ -236,7 +236,7 @@
                                 <button 
                                     type="button"
                                     class="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-50 transition-colors duration-200 active:scale-95"
-                                    onclick="window.location.href='{{ route('items.show', $order->product_id ?? '#') }}'"
+                                    onclick="window.location.href='{{ route('products.show', $order->product_id ?? '#') }}'"
                                 >
                                     查看详情
                                 </button>

@@ -25,47 +25,39 @@
             <form method="POST" action="{{ route('items.store') }}" enctype="multipart/form-data" class="space-y-6">
                 @csrf
 
-                <!-- Hero Uploader -->
+                <!-- Gallery Uploader -->
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-3">商品实拍图</label>
-                    <div 
-                        id="hero-dropzone"
-                        class="relative h-64 rounded-3xl border-2 border-dashed border-gray-200 bg-gray-50 flex items-center justify-center text-center cursor-pointer transition-all duration-300 hover:border-blue-400 hover:bg-white"
-                        onclick="document.getElementById('product-image-input').click()"
-                    >
-                        <div id="hero-dropzone-placeholder" class="flex flex-col items-center gap-3">
-                            <div class="w-16 h-16 rounded-2xl bg-white shadow-inner flex items-center justify-center">
-                                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div id="gallery-grid" class="grid grid-cols-3 gap-4">
+                        <button
+                            type="button"
+                            id="gallery-add-tile"
+                            class="relative flex flex-col items-center justify-center h-32 rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 text-center transition-all hover:border-blue-400 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                        >
+                            <div class="w-12 h-12 rounded-xl bg-white shadow-inner flex items-center justify-center mb-2">
+                                <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h1.5a2 2 0 001.8-1.1l.7-1.4A2 2 0 0110.7 3h2.6a2 2 0 011.7.5l1.5 1.4A2 2 0 0017.2 6H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v8m4-4H8" />
                                 </svg>
                             </div>
                             <div>
-                                <p class="text-gray-800 font-semibold">上传实拍图</p>
-                                <p class="text-sm text-gray-400">支持 JPG / PNG / WEBP · 建议 4:3</p>
+                                <p class="text-gray-800 font-semibold">添加图片</p>
+                                <p class="text-xs text-gray-400">JPG / PNG / WEBP，最多 10 张</p>
                             </div>
-                        </div>
-                        <img id="hero-preview" src="" alt="商品图片预览" class="absolute inset-0 w-full h-full object-cover rounded-3xl hidden">
-                        <button 
-                            type="button" 
-                            id="hero-remove-btn"
-                            class="hidden absolute top-4 right-4 bg-black/60 text-white rounded-full p-2 hover:bg-black/80 transition"
-                            onclick="resetHeroImage(event)"
-                        >
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
                         </button>
                     </div>
                     <input 
                         type="file" 
-                        id="product-image-input" 
-                        name="image" 
+                        id="product-images-input" 
+                        name="images[]" 
+                        multiple
                         accept="image/jpeg,image/jpg,image/png,image/webp"
                         class="hidden"
-                        onchange="handleHeroImageSelect(event)"
                     >
-                    @error('image')
+                    @error('images')
+                        <p class="text-sm text-red-600 mt-2">{{ $message }}</p>
+                    @enderror
+                    @error('images.*')
                         <p class="text-sm text-red-600 mt-2">{{ $message }}</p>
                     @enderror
                 </div>
@@ -190,54 +182,87 @@
 </style>
 
 <script>
-    const heroDropzone = document.getElementById('hero-dropzone');
-    const heroPreview = document.getElementById('hero-preview');
-    const heroPlaceholder = document.getElementById('hero-dropzone-placeholder');
-    const heroRemoveBtn = document.getElementById('hero-remove-btn');
-    const heroInput = document.getElementById('product-image-input');
+    const galleryGrid = document.getElementById('gallery-grid');
+    const galleryAddTile = document.getElementById('gallery-add-tile');
+    const galleryInput = document.getElementById('product-images-input');
+    const maxGallerySize = 5 * 1024 * 1024;
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    let galleryTransfer = new DataTransfer();
 
-    function handleHeroImageSelect(event) {
-        const file = event.target.files[0];
-        if (!file) {
-            return;
-        }
+    galleryAddTile.addEventListener('click', () => galleryInput.click());
+    galleryInput.addEventListener('change', handleImageSelect);
 
-        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-        if (!validTypes.includes(file.type)) {
-            alert('请上传 JPG、PNG 或 WEBP 格式的图片');
-            heroInput.value = '';
-            return;
-        }
+    function handleImageSelect(event) {
+        const files = Array.from(event.target.files || []);
 
-        const maxSize = 5 * 1024 * 1024;
-        if (file.size > maxSize) {
-            alert('图片大小不能超过 5MB');
-            heroInput.value = '';
-            return;
-        }
+        files.forEach((file) => {
+            if (!allowedTypes.includes(file.type)) {
+                alert('请上传 JPG、PNG 或 WEBP 格式的图片');
+                return;
+            }
 
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            heroPreview.src = e.target.result;
-            heroPreview.classList.remove('hidden');
-            heroPlaceholder.classList.add('opacity-0');
-            heroRemoveBtn.classList.remove('hidden');
-            heroDropzone.classList.remove('border-dashed', 'border-gray-200');
-            heroDropzone.classList.add('border-solid', 'border-blue-200');
-        };
-        reader.readAsDataURL(file);
+            if (file.size > maxGallerySize) {
+                alert('图片大小不能超过 5MB');
+                return;
+            }
+
+            galleryTransfer.items.add(file);
+        });
+
+        galleryInput.files = galleryTransfer.files;
+        event.target.value = '';
+        renderGalleryPreviews();
     }
 
-    function resetHeroImage(event) {
-        event.preventDefault();
-        event.stopPropagation();
-        heroPreview.src = '';
-        heroPreview.classList.add('hidden');
-        heroPlaceholder.classList.remove('opacity-0');
-        heroRemoveBtn.classList.add('hidden');
-        heroInput.value = '';
-        heroDropzone.classList.add('border-dashed', 'border-gray-200');
-        heroDropzone.classList.remove('border-solid', 'border-blue-200');
+    function removeImage(index) {
+        if (!galleryTransfer.items.length) {
+            return;
+        }
+
+        const preview = galleryGrid.querySelector(`[data-gallery-preview="${index}"]`);
+        if (preview) {
+            preview.classList.add('opacity-0', 'scale-90');
+            setTimeout(() => preview.remove(), 150);
+        }
+
+        galleryTransfer.items.remove(index);
+        galleryInput.files = galleryTransfer.files;
+        // Re-render to update indexes after removal
+        setTimeout(renderGalleryPreviews, 160);
+    }
+
+    function renderGalleryPreviews() {
+        galleryGrid.querySelectorAll('[data-gallery-preview]').forEach((node) => node.remove());
+
+        Array.from(galleryTransfer.files).forEach((file, index) => {
+            const wrapper = document.createElement('div');
+            wrapper.dataset.galleryPreview = index;
+            wrapper.className = 'relative h-32 rounded-2xl overflow-hidden bg-gray-100 shadow-sm transition-all duration-200 opacity-0 scale-95';
+
+            const img = document.createElement('img');
+            img.alt = `商品图片 ${index + 1}`;
+            img.className = 'w-full h-full object-cover';
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-lg hover:bg-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400';
+            removeBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>';
+            removeBtn.addEventListener('click', () => removeImage(index));
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                img.src = e.target.result;
+                requestAnimationFrame(() => {
+                    wrapper.classList.remove('opacity-0', 'scale-95');
+                    wrapper.classList.add('opacity-100', 'scale-100');
+                });
+            };
+            reader.readAsDataURL(file);
+
+            wrapper.appendChild(img);
+            wrapper.appendChild(removeBtn);
+            galleryGrid.appendChild(wrapper);
+        });
     }
 </script>
 @endsection

@@ -57,7 +57,7 @@
                                 <div class="flex flex-col md:flex-row">
                                     <!-- Left: Product Image -->
                                     <div class="w-full md:w-48 h-48 md:h-auto flex-shrink-0 bg-gray-100 overflow-hidden">
-                                        <a href="{{ route('items.show', $order->product) }}" class="block w-full h-full">
+                                        <a href="{{ route('products.show', $order->product) }}" class="block w-full h-full">
                                             <img 
                                                 src="{{ $order->product->image_url }}" 
                                                 alt="{{ $order->product->title }}"
@@ -69,7 +69,7 @@
                                     <!-- Middle: Product Info -->
                                     <div class="flex-1 p-6 flex flex-col justify-between">
                                         <div>
-                                            <a href="{{ route('items.show', $order->product) }}" class="block">
+                                            <a href="{{ route('products.show', $order->product) }}" class="block">
                                                 <h3 class="text-xl font-bold text-gray-900 mb-2 hover:text-blue-600 transition-colors">
                                                     {{ $order->product->title }}
                                                 </h3>
@@ -174,7 +174,7 @@
                                 <div class="flex flex-col md:flex-row">
                                     <!-- Left: Product Image -->
                                     <div class="w-full md:w-48 h-48 md:h-auto flex-shrink-0 bg-gray-100 overflow-hidden">
-                                        <a href="{{ route('items.show', $order->product) }}" class="block w-full h-full">
+                                        <a href="{{ route('products.show', $order->product) }}" class="block w-full h-full">
                                             <img 
                                                 src="{{ $order->product->image_url }}" 
                                                 alt="{{ $order->product->title }}"
@@ -186,7 +186,7 @@
                                     <!-- Middle: Product Info -->
                                     <div class="flex-1 p-6 flex flex-col justify-between">
                                         <div>
-                                            <a href="{{ route('items.show', $order->product) }}" class="block">
+                                            <a href="{{ route('products.show', $order->product) }}" class="block">
                                                 <h3 class="text-xl font-bold text-gray-900 mb-2 hover:text-blue-600 transition-colors">
                                                     {{ $order->product->title }}
                                                 </h3>

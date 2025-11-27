@@ -45,7 +45,7 @@
 
                     <div id="recommendation-track" class="flex gap-6 overflow-x-auto pt-4 pb-24 px-4 no-scrollbar cursor-grab select-none active:cursor-grabbing" style="will-change: scroll-position;">
                         @foreach($recommendedProducts as $product)
-                            <a href="{{ route('items.show', $product) }}" class="draggable-item min-w-[280px] md:min-w-[320px] snap-center bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] transition-all duration-500 hover:-translate-y-2 group block cursor-grab active:cursor-grabbing">
+                            <a href="{{ route('products.show', $product) }}" class="draggable-item min-w-[280px] md:min-w-[320px] snap-center bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] transition-all duration-500 hover:-translate-y-2 group block cursor-grab active:cursor-grabbing">
                                 
                                 <div class="relative aspect-[4/3] overflow-hidden bg-gray-50">
                                     <img src="{{ $product->image_url ?? 'https://via.placeholder.com/400x300?text=No+Image' }}" draggable="false" onmousedown="return false" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 pointer-events-auto select-none" alt="{{ $product->title }}">
@@ -152,7 +152,7 @@
                 @forelse($items as $item)
                     @php
                         $isSample = !($item instanceof \App\Models\Item);
-                        $itemUrl = $isSample ? '#' : route('items.show', $item);
+                        $itemUrl = $isSample ? '#' : route('products.show', $item);
                         $imageSrc = $isSample
                             ? 'https://via.placeholder.com/400x300?text=Campus+Market'
                             : $item->image_url;

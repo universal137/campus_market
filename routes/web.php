@@ -205,6 +205,7 @@ Route::get('/items', [ItemController::class, 'index'])->name('items.index');
 Route::get('/items/{item}', [ItemController::class, 'show'])->name('items.show');
 Route::post('/items', [ItemController::class, 'store'])->name('items.store');
 Route::get('/products/create', [ProductController::class, 'create'])->name('products.create')->middleware('auth');
+Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
 
 // Item management routes (require authentication)
 Route::middleware('auth')->group(function () {

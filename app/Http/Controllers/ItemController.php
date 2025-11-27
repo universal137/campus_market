@@ -52,23 +52,9 @@ class ItemController extends Controller
         ]);
     }
 
-    public function show(Item $item): View
+    public function show(Item $item): RedirectResponse
     {
-        $item->load(['user', 'category']);
-
-        if (auth()->check()) {
-            ProductView::updateOrCreate(
-                [
-                    'user_id' => auth()->id(),
-                    'product_id' => $item->id,
-                ],
-                []
-            );
-        }
-
-        return view('items.show', [
-            'item' => $item,
-        ]);
+        return redirect()->route('products.show', $item);
     }
 
     public function store(Request $request): RedirectResponse
@@ -81,7 +67,9 @@ class ItemController extends Controller
             'description' => ['required', 'string', 'max:2000'],
             'price' => ['required', 'numeric', 'min:0'],
             'deal_place' => ['nullable', 'string', 'max:120'],
-            'image' => ['required', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
+            'images' => ['required_without:image', 'array', 'min:1', 'max:10'],
+            'images.*' => ['image', 'mimes:jpeg,png,jpg,gif,webp', 'max:5120'],
+            'image' => ['required_without:images', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:5120'],
         ]);
 
         $user = User::firstOrCreate(
@@ -92,13 +80,35 @@ class ItemController extends Controller
             ]
         );
 
-        // Handle image upload
-        $imagePath = null;
-        if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('products', 'public');
-        } else {
-            // Fallback to random image if no upload (should not happen with required validation)
-            $imagePath = ItemFactory::getRandomImageUrl();
+        $thumbnailPath = null;
+        $galleryPaths = [];
+
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $imageFile) {
+                if (!$imageFile?->isValid()) {
+                    continue;
+                }
+
+                $storedPath = $imageFile->store('products', 'public');
+                $galleryPaths[] = $storedPath;
+
+                if ($thumbnailPath === null) {
+                    $thumbnailPath = $storedPath;
+                }
+            }
+        }
+
+        if ($thumbnailPath === null && $request->hasFile('image')) {
+            $thumbnailPath = $request->file('image')->store('products', 'public');
+            $galleryPaths[] = $thumbnailPath;
+        }
+
+        if ($thumbnailPath === null) {
+            $thumbnailPath = ItemFactory::getRandomImageUrl();
+        }
+
+        if (empty($galleryPaths) && $thumbnailPath !== null) {
+            $galleryPaths[] = $thumbnailPath;
         }
 
         Item::create([
@@ -108,7 +118,9 @@ class ItemController extends Controller
             'description' => $validated['description'],
             'price' => $validated['price'],
             'deal_place' => $validated['deal_place'] ?? null,
-            'image' => $imagePath,
+            'image' => $thumbnailPath,
+            'image_path' => $thumbnailPath,
+            'gallery' => $galleryPaths,
             'status' => 'on_sale',
             'latitude' => $request->input('lat'),
             'longitude' => $request->input('lng'),

@@ -61,7 +61,7 @@
                             <article class="bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm transition-all duration-300 ease hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(0,0,0,0.1)] hover:border-slate-300 relative group">
                                 <!-- Image Area -->
                                 <div class="aspect-[4/3] bg-gray-100 overflow-hidden relative">
-                                    <a href="{{ route('items.show', $item) }}" class="block w-full h-full">
+                                    <a href="{{ route('products.show', $item) }}" class="block w-full h-full">
                                         <img 
                                             src="{{ $item->image_url }}" 
                                             alt="{{ $item->title }}"
@@ -91,7 +91,7 @@
                                     </button>
                                 </div>
                                 
-                                <a href="{{ route('items.show', $item) }}" class="block">
+                                <a href="{{ route('products.show', $item) }}" class="block">
                                     <!-- Content -->
                                     <div class="p-5">
                                         <!-- Category Badge -->
