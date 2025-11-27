@@ -266,9 +266,9 @@
                     <input 
                         id="publisher_name" 
                         name="publisher_name" 
-                        value="{{ old('publisher_name') }}" 
+                        value="{{ old('publisher_name', auth()->user()->name ?? '') }}" 
                         required
-                        class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                        class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all duration-200"
                         placeholder="请输入您的昵称"
                     >
                 </div>
@@ -278,9 +278,9 @@
                         type="email" 
                         id="publisher_email" 
                         name="publisher_email" 
-                        value="{{ old('publisher_email') }}" 
+                        value="{{ old('publisher_email', auth()->user()->email ?? '') }}" 
                         required
-                        class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                        class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all duration-200"
                         placeholder="example@campus.edu"
                     >
                 </div>

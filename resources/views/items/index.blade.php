@@ -352,7 +352,7 @@
                         <input 
                             id="seller_name" 
                             name="seller_name" 
-                            value="{{ old('seller_name') }}" 
+                            value="{{ old('seller_name', auth()->user()->name ?? '') }}" 
                             required
                             class="w-full bg-gray-50 border-0 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
                             placeholder="如 小向日葵"
@@ -364,7 +364,7 @@
                             type="email" 
                             id="seller_email" 
                             name="seller_email" 
-                            value="{{ old('seller_email') }}" 
+                            value="{{ old('seller_email', auth()->user()->email ?? '') }}" 
                             required
                             class="w-full bg-gray-50 border-0 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
                             placeholder="example@campus.edu"

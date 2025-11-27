@@ -163,7 +163,7 @@
     </main>
 
     <footer>
-        © {{ date('Y') }} 校园易 · 校园二手与互助平台（演示版）
+        © {{ date('Y') }} 校园易 · 校园二手与互助平台
     </footer>
 
     <script src="{{ asset('js/app.js') }}"></script>
