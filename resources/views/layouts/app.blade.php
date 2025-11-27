@@ -95,6 +95,22 @@
                                             <span class="text-xs text-gray-500 block">查看交易记录</span>
                                         </span>
                                     </a>
+                                    <a href="{{ route('user.wallet') }}" class="user-dropdown__item">
+                                        <span class="w-5 h-5 text-gray-500 flex items-center justify-center">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                                            </svg>
+                                        </span>
+                                        <span class="flex-1">
+                                            <span class="text-sm font-medium text-gray-800 block">我的钱包</span>
+                                            <span class="text-xs text-gray-500 block flex items-center gap-1">
+                                                余额
+                                                <span class="ml-auto text-[11px] font-mono text-gray-400">
+                                                    CC {{ number_format(auth()->user()->balance ?? 0, 2) }}
+                                                </span>
+                                            </span>
+                                        </span>
+                                    </a>
                                     <a href="{{ route('user.collection') }}" class="user-dropdown__item">
                                         <span class="w-5 h-5 text-gray-500 flex items-center justify-center">
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c0 4-7 7-7 7s-7-3-7-7a4 4 0 0 1 4-4c1.2 0 2.4.8 3 2 .6-1.2 1.8-2 3-2a4 4 0 0 1 4 4Z"/></svg>

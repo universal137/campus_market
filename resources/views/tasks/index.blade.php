@@ -545,6 +545,17 @@
             }, index * 100);
         });
 
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('trigger') === 'publish') {
+            setTimeout(() => {
+                openPublishModal();
+                params.delete('trigger');
+                const newQuery = params.toString();
+                const newUrl = window.location.pathname + (newQuery ? `?${newQuery}` : '') + window.location.hash;
+                window.history.replaceState({}, '', newUrl);
+            }, 200);
+        }
+
         // AJAX form submission with fullscreen overlay
         const taskPublishForm = document.getElementById('task-publish-form');
         const taskSubmitBtn = document.getElementById('task-submit-btn');

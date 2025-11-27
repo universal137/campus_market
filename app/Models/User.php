@@ -29,6 +29,7 @@ class User extends Authenticatable
         'major',
         'enrollment_year',
         'bio',
+        'balance',
     ];
 
     /**
@@ -118,6 +119,14 @@ class User extends Authenticatable
     public function messages()
     {
         return $this->hasMany(Message::class);
+    }
+
+    /**
+     * Campus coin transactions associated with the user.
+     */
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class);
     }
 
     /**

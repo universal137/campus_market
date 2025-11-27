@@ -17,6 +17,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\WalletController;
 use Illuminate\Support\Facades\DB;
 
 Route::get('/', function () {
@@ -228,6 +229,10 @@ Route::middleware('auth')->group(function () {
     
     // Collection route
     Route::get('/my-collection', [\App\Http\Controllers\UserController::class, 'myCollection'])->name('user.collection');
+
+    // Wallet routes
+    Route::get('/user/wallet', [WalletController::class, 'index'])->name('user.wallet');
+    Route::post('/user/wallet/recharge', [WalletController::class, 'recharge'])->name('user.wallet.recharge');
     
     // Chat routes
     Route::get('/chat', [ChatController::class, 'index'])->name('chat.index');

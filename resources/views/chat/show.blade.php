@@ -138,7 +138,7 @@
 
             <div>
                 <p class="text-xs font-semibold text-gray-500 uppercase mb-3 tracking-wider">选择支付方式</p>
-                <div class="grid grid-cols-3 gap-3">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <button type="button" class="payment-card" data-payment-card data-method="wechat">
                         <div class="icon-circle wechat-icon">
                             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
@@ -164,6 +164,18 @@
                             </svg>
                         </div>
                         <span class="text-xs font-semibold">线下交易</span>
+                    </button>
+
+                    <button type="button" class="payment-card" data-payment-card data-method="coin">
+                        <div class="icon-circle bg-yellow-100 text-yellow-600">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm0 2a8 8 0 0 1 3 .59v2.13a4 4 0 0 0-3-.72 4.13 4.13 0 0 0-4 4.33 4.13 4.13 0 0 0 4 4.34 4 4 0 0 0 3-.72v2.12A8 8 0 1 1 12 4Zm1.5 6.33a2 2 0 0 1-3.12 1.7v-3.4a2 2 0 0 1 3.12 1.7Z"/>
+                            </svg>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <span class="text-xs font-semibold">校园币支付</span>
+                            <span class="text-[10px] text-gray-500">(余额: CC {{ number_format(auth()->user()->balance, 2) }})</span>
+                        </div>
                     </button>
                 </div>
             </div>

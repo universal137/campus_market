@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\Item;
 use App\Models\Review;
+use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -42,11 +43,11 @@ class OrderController extends Controller
     {
         $validated = $request->validate([
             'product_id' => ['required', 'integer', 'exists:items,id'],
-            'payment_method' => ['required', 'string', 'in:wechat,alipay,offline'],
+            'payment_method' => ['required', 'string', 'in:wechat,alipay,offline,coin'],
         ]);
 
         $buyer = Auth::user();
-        $product = Item::findOrFail($validated['product_id']);
+        $product = Item::with('user')->findOrFail($validated['product_id']);
 
         if ($product->user_id === $buyer->id) {
             return response()->json([
@@ -62,7 +63,16 @@ class OrderController extends Controller
             ], 422);
         }
 
-        $order = DB::transaction(function () use ($product, $buyer, $validated) {
+        if ($validated['payment_method'] === 'coin' && $buyer->balance < $product->price) {
+            return response()->json([
+                'status' => 'error',
+                'message' => '余额不足，请充值',
+            ], 422);
+        }
+
+        $seller = $product->user;
+
+        $order = DB::transaction(function () use ($product, $buyer, $seller, $validated) {
             $order = Order::create([
                 'buyer_id' => $buyer->id,
                 'seller_id' => $product->user_id,
@@ -75,6 +85,26 @@ class OrderController extends Controller
             $product->update([
                 'status' => 'sold',
             ]);
+
+            if ($validated['payment_method'] === 'coin') {
+                $buyer->decrement('balance', $product->price);
+                $buyer->transactions()->create([
+                    'type' => Transaction::TYPE_PAYMENT,
+                    'amount' => $product->price,
+                    'description' => '购买商品：' . $product->title,
+                    'reference_id' => (string) $order->id,
+                ]);
+
+                if ($seller) {
+                    $seller->increment('balance', $product->price);
+                    $seller->transactions()->create([
+                        'type' => Transaction::TYPE_INCOME,
+                        'amount' => $product->price,
+                        'description' => '售出商品：' . $product->title,
+                        'reference_id' => (string) $order->id,
+                    ]);
+                }
+            }
 
             return $order;
         });

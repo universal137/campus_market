@@ -636,7 +636,7 @@
             };
         }
 
-        // Staggered Fade-in Entry Animation
+        // Staggered Fade-in Entry Animation + auto-open support
         document.addEventListener('DOMContentLoaded', function() {
             const productCards = document.querySelectorAll('.product-card-entry');
             
@@ -646,6 +646,17 @@
                     card.classList.add('opacity-100', 'translate-y-0');
                 }, index * 100);
             });
+
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('trigger') === 'publish') {
+                setTimeout(() => {
+                    openPublishModal();
+                    params.delete('trigger');
+                    const newQuery = params.toString();
+                    const newUrl = window.location.pathname + (newQuery ? `?${newQuery}` : '') + window.location.hash;
+                    window.history.replaceState({}, '', newUrl);
+                }, 200);
+            }
         });
 
         /**
