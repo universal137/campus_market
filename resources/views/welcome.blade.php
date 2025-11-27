@@ -35,33 +35,103 @@
     </section>
 
     @if(isset($recommendedProducts) && $recommendedProducts->count() > 0)
-        <section class="py-12">
-            <div class="max-w-6xl mx-auto mb-6 px-4 flex items-center gap-2">
-                <h2 class="text-2xl font-bold text-gray-900">✨ 猜你喜欢</h2>
-                <span class="text-sm text-gray-400 bg-gray-100 px-2 py-1 rounded-full">精选推荐</span>
-                </div>
-            <div class="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-8 pt-4 px-4 no-scrollbar" style="scroll-behavior: smooth;">
-                    @foreach($recommendedProducts as $product)
-                    <a href="{{ route('items.show', $product) }}" class="min-w-[280px] md:min-w-[320px] snap-center bg-white rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden group hover:shadow-[0_8px_30px_rgba(0,0,0,0.15)] transition-all duration-500 hover:-translate-y-2 animate-fade-in-up cursor-pointer">
-                        <div class="relative aspect-[4/3] overflow-hidden">
-                            <img src="{{ $product->image_url }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="{{ $product->title }}">
-                            <div class="absolute bottom-3 left-3 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-sm font-bold text-gray-900 shadow-sm">
-                                ¥{{ number_format($product->price, 2) }}
-                            </div>
-                                        </div>
-                        <div class="p-5">
-                            <h3 class="font-bold text-gray-900 truncate mb-1">{{ $product->title }}</h3>
-                            <div class="flex items-center gap-2 text-xs text-gray-500">
-                                <div class="w-5 h-5 rounded-full bg-gray-200 overflow-hidden">
-                                    <img src="{{ $product->user->avatar_url ?? 'https://ui-avatars.com/api/?name=' . urlencode($product->user->name) }}" class="w-full h-full object-cover" alt="{{ $product->user->name }}">
-                                </div>
-                                <span>{{ $product->user->name }}</span>
+        <section class="py-8 bg-gradient-to-b from-gray-50 to-white">
+            <div class="max-w-7xl mx-auto">
+                <div class="relative group">
+                    <div class="flex items-center gap-2 mb-6 px-4">
+                        <h2 class="text-2xl font-bold text-gray-900">✨ 猜你喜欢</h2>
+                        <span class="px-2 py-1 rounded-md bg-gray-100 text-xs text-gray-500 font-medium">精选推荐</span>
+                    </div>
+
+                    <div id="recommendation-track" class="flex gap-6 overflow-x-auto pt-4 pb-24 px-4 no-scrollbar cursor-grab select-none active:cursor-grabbing" style="will-change: scroll-position;">
+                        @foreach($recommendedProducts as $product)
+                            <a href="{{ route('items.show', $product) }}" class="draggable-item min-w-[280px] md:min-w-[320px] snap-center bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] transition-all duration-500 hover:-translate-y-2 group block cursor-grab active:cursor-grabbing">
+                                
+                                <div class="relative aspect-[4/3] overflow-hidden bg-gray-50">
+                                    <img src="{{ $product->image_url ?? 'https://via.placeholder.com/400x300?text=No+Image' }}" draggable="false" onmousedown="return false" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 pointer-events-auto select-none" alt="{{ $product->title }}">
+                                    
+                                    <div class="absolute bottom-3 left-3 bg-white/95 backdrop-blur px-3 py-1.5 rounded-full text-sm font-bold text-gray-900 shadow-sm border border-gray-100">
+                                        ¥{{ number_format($product->price ?? 0, 2) }}
                                     </div>
                                 </div>
-                        </a>
-                    @endforeach
+
+                                <div class="p-5">
+                                    <h3 class="text-lg font-bold text-gray-900 truncate mb-2">{{ $product->title }}</h3>
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-6 h-6 rounded-full bg-gray-100 overflow-hidden shrink-0">
+                                            @if(optional($product->user)->avatar_url)
+                                                <img src="{{ $product->user->avatar_url }}" draggable="false" onmousedown="return false" class="w-full h-full object-cover pointer-events-auto select-none" alt="{{ optional($product->user)->name }}">
+                                            @else
+                                                <img src="https://ui-avatars.com/api/?name={{ urlencode(optional($product->user)->name ?? 'U') }}" draggable="false" onmousedown="return false" class="w-full h-full object-cover pointer-events-auto select-none" alt="{{ optional($product->user)->name }}">
+                                            @endif
+                                        </div>
+                                        <span class="text-sm text-gray-500 truncate">{{ optional($product->user)->name ?? '匿名用户' }}</span>
+                                    </div>
+                                </div>
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
             </div>
         </section>
+
+        <script>
+            (function() {
+                const slider = document.getElementById('recommendation-track');
+                if (!slider) return;
+
+                let isDown = false;
+                let startX;
+                let scrollLeft;
+                let velX = 0;
+                let momentumID;
+
+                slider.addEventListener('mousedown', (e) => {
+                    isDown = true;
+                    slider.classList.add('cursor-grabbing');
+                    cancelAnimationFrame(momentumID);
+                    startX = e.pageX - slider.offsetLeft;
+                    scrollLeft = slider.scrollLeft;
+                });
+
+                slider.addEventListener('mouseleave', () => {
+                    if (!isDown) return;
+                    isDown = false;
+                    slider.classList.remove('cursor-grabbing');
+                    beginMomentum();
+                });
+
+                slider.addEventListener('mouseup', () => {
+                    if (!isDown) return;
+                    isDown = false;
+                    slider.classList.remove('cursor-grabbing');
+                    beginMomentum();
+                });
+
+                slider.addEventListener('mousemove', (e) => {
+                    if (!isDown) return;
+                    e.preventDefault();
+                    const x = e.pageX - slider.offsetLeft;
+                    const walk = (x - startX);
+                    const prevScrollLeft = slider.scrollLeft;
+                    slider.scrollLeft = scrollLeft - walk;
+                    velX = slider.scrollLeft - prevScrollLeft;
+                });
+
+                function beginMomentum() {
+                    cancelAnimationFrame(momentumID);
+
+                    function loop() {
+                        if (Math.abs(velX) < 0.5) return;
+                        slider.scrollLeft += velX;
+                        velX *= 0.95;
+                        momentumID = requestAnimationFrame(loop);
+                    }
+
+                    loop();
+                }
+            })();
+        </script>
     @endif
 
     <!-- Latest Items Section -->

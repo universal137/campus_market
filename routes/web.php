@@ -140,12 +140,14 @@ Route::get('/', function () {
         });
     }
 
+    // Initialize as empty collection (never null)
     $recommendedProducts = collect();
     $minRecommendations = 4;
 
     if (auth()->check()) {
         $userId = auth()->id();
 
+        // Get user's top 2 most viewed categories
         $topCategoryIds = ProductView::query()
             ->where('product_views.user_id', $userId)
             ->join('items', 'product_views.product_id', '=', 'items.id')
@@ -157,6 +159,7 @@ Route::get('/', function () {
             ->limit(2)
             ->pluck('items.category_id');
 
+        // Get recommendations from user's favorite categories
         if ($topCategoryIds->isNotEmpty()) {
             $recommendedProducts = Item::with(['user', 'category'])
                 ->where('status', 'on_sale')
@@ -171,12 +174,15 @@ Route::get('/', function () {
         }
     }
 
+    // Fill with random items if not enough recommendations
     if ($recommendedProducts->count() < $minRecommendations) {
         $needed = max(8 - $recommendedProducts->count(), $minRecommendations - $recommendedProducts->count());
+        $excludeIds = $recommendedProducts->pluck('id')->toArray();
+        
         $fallback = Item::with(['user', 'category'])
             ->whereIn('status', ['on_sale', 'active'])
-            ->when($recommendedProducts->isNotEmpty(), function ($query) use ($recommendedProducts) {
-                $query->whereNotIn('id', $recommendedProducts->pluck('id'));
+            ->when(!empty($excludeIds), function ($query) use ($excludeIds) {
+                $query->whereNotIn('id', $excludeIds);
             })
             ->inRandomOrder()
             ->take(max($needed, $minRecommendations))
@@ -185,8 +191,11 @@ Route::get('/', function () {
         $recommendedProducts = $recommendedProducts->concat($fallback)->take(8);
     }
 
-        if ($recommendedProducts->isEmpty()) {
-            $recommendedProducts = $items instanceof \Illuminate\Support\Collection ? $items : collect($items);
+    // Final fallback: use latest items if still empty
+    if ($recommendedProducts->isEmpty()) {
+        $recommendedProducts = $items instanceof \Illuminate\Support\Collection 
+            ? $items 
+            : collect($items ?? []);
     }
 
     return view('welcome', compact('categories', 'items', 'tasks', 'recommendedProducts'));

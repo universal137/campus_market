@@ -7,7 +7,7 @@
         securityJsCode: '53cd5c8cddb263d94888f1f61fe08201'
     };
 </script>
-<script src="https://webapi.amap.com/maps?v=2.0&key=17874d29165d98aaefcd72ca015bb493&plugin=AMap.ToolBar"></script>
+<script src="https://webapi.amap.com/maps?v=2.0&key=17874d29165d98aaefcd72ca015bb493&plugin=AMap.AutoComplete,AMap.PlaceSearch,AMap.Geocoder,AMap.ToolBar"></script>
 
 @section('content')
     <div class="bg-[#F9FAFB] min-h-screen">
@@ -46,7 +46,7 @@
                 <div class="flex items-center gap-3 shrink-0 w-full sm:w-auto justify-center sm:justify-end">
                     <button 
                         type="button"
-                        onclick="openPublishModal()"
+                        onclick="openProductModal()"
                         class="h-12 px-6 bg-blue-600 text-white rounded-full shadow-lg font-bold flex items-center justify-center gap-2 hover:bg-blue-700 hover:-translate-y-0.5 transition-all"
                     >
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
@@ -85,7 +85,7 @@
                 </div>
                 <button 
                     type="button"
-                    onclick="openPublishModal()" 
+                    onclick="openProductModal()" 
                     class="px-8 py-3 bg-white text-blue-600 font-semibold rounded-full transition-all duration-200 ease-in-out hover:bg-gray-50 active:scale-95 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                 >
                     立即发布
@@ -278,10 +278,10 @@
         role="dialog" 
         aria-modal="true"
     >
-        <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" onclick="closePublishModal()"></div>
+        <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" onclick="closeProductModal()"></div>
 
         <div class="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl p-8 transform transition-all m-auto" onclick="event.stopPropagation()">
-            <button type="button" onclick="closePublishModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-2">
+            <button type="button" onclick="closeProductModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-2">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
 
@@ -429,25 +429,35 @@
 
                 <div class="space-y-3">
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">地图定位</label>
-                        <div id="product-map" class="h-72 w-full rounded-2xl border border-gray-100 shadow-sm overflow-hidden relative z-0"></div>
-                        <input type="hidden" name="lat" id="publish-lat" value="{{ old('lat') }}">
-                        <input type="hidden" name="lng" id="publish-lng" value="{{ old('lng') }}">
-                    </div>
-                    <div>
-                        <label for="deal_place" class="block text-sm font-semibold text-gray-700 mb-2">位置名称（可选）</label>
-                        <input 
-                            id="deal_place" 
-                            name="deal_place" 
-                            value="{{ old('deal_place') }}"
-                            class="w-full bg-gray-50 border-0 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
-                            placeholder="如 图书馆一楼 / 南门星巴克 / 宿舍楼下"
-                        >
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">交易地点</label>
+                        <div class="flex flex-col gap-2">
+                            <div class="flex gap-2">
+                                <input 
+                                    id="product-location-input" 
+                                    name="deal_place" 
+                                    value="{{ old('deal_place') }}"
+                                    class="flex-1 bg-gray-50 border-0 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                                    placeholder="输入地点，例如：图书馆一楼 / 南门星巴克"
+                                    autocomplete="off"
+                                >
+                                <button 
+                                    type="button" 
+                                    id="product-location-search-btn"
+                                    onclick="searchProductLocation()"
+                                    class="px-5 py-3 rounded-2xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
+                                >
+                                    搜索
+                                </button>
+                            </div>
+                            <div id="product-map" class="h-72 w-full rounded-2xl border border-gray-100 shadow-sm overflow-hidden relative z-0"></div>
+                        </div>
+                        <input type="hidden" name="lat" id="product-lat" value="{{ old('lat') }}">
+                        <input type="hidden" name="lng" id="product-lng" value="{{ old('lng') }}">
                     </div>
                 </div>
 
                 <div class="mt-8 flex justify-end gap-3">
-                    <button type="button" onclick="closePublishModal()" class="px-6 py-2.5 rounded-full bg-gray-100 text-gray-700 font-bold hover:bg-gray-200 transition">取消</button>
+                    <button type="button" onclick="closeProductModal()" class="px-6 py-2.5 rounded-full bg-gray-100 text-gray-700 font-bold hover:bg-gray-200 transition">取消</button>
                     <button type="submit" class="px-6 py-2.5 rounded-full bg-blue-600 text-white font-bold hover:bg-blue-700 transition shadow-lg">发布商品</button>
                 </div>
             </form>
@@ -490,13 +500,17 @@
             });
         })();
 
-        let productMapInstance = null;
-        let productMapMarker = null;
+        let productMap = null;
+        let productMarker = null;
+        let productAutoComplete = null;
+        let productPlaceSearch = null;
+        let productGeocoder = null;
 
-        function initializePublishMap() {
+        function initProductMap() {
+            const latInput = document.getElementById('product-lat');
+            const lngInput = document.getElementById('product-lng');
+            const locationInput = document.getElementById('product-location-input');
             const mapElement = document.getElementById('product-map');
-            const latInput = document.getElementById('publish-lat');
-            const lngInput = document.getElementById('publish-lng');
 
             if (!mapElement || typeof AMap === 'undefined') {
                 console.warn('AMap SDK 未加载，无法初始化地图');
@@ -507,47 +521,162 @@
             const defaultLng = parseFloat(lngInput?.value) || 116.4074;
             const center = [defaultLng, defaultLat];
 
-            if (!productMapInstance) {
-                productMapInstance = new AMap.Map('product-map', {
+            if (!productMap) {
+                productMap = new AMap.Map(mapElement, {
                     zoom: 16,
                     center,
                     viewMode: '3D',
                     resizeEnable: true,
-                    scrollWheel: false,
-                    doubleClickZoom: false,
+                    scrollWheel: true,
                     dragEnable: true
                 });
 
-                productMapMarker = new AMap.Marker({
+                productMarker = new AMap.Marker({
                     position: center,
                     draggable: true,
                     cursor: 'move'
                 });
+                productMarker.setMap(productMap);
 
-                productMapInstance.add(productMapMarker);
-
-                productMapMarker.on('dragend', function (event) {
-                    updatePublishLatLng(event.lnglat);
+                productMarker.on('dragend', function(event) {
+                    updateProductLatLng(event.lnglat, true);
                 });
 
-                productMapInstance.on('click', function (event) {
-                    productMapMarker.setPosition(event.lnglat);
-                    updatePublishLatLng(event.lnglat);
+                productMap.on('click', function(event) {
+                    productMarker.setPosition(event.lnglat);
+                    updateProductLatLng(event.lnglat, true);
                 });
+
+                productAutoComplete = new AMap.AutoComplete({
+                    input: 'product-location-input',
+                    city: '全国',
+                    citylimit: false
+                });
+
+                productPlaceSearch = new AMap.PlaceSearch({
+                    city: '全国',
+                    citylimit: false
+                });
+
+                productGeocoder = new AMap.Geocoder({
+                    city: '全国'
+                });
+
+                bindProductSearchEvents();
             } else {
-                productMapInstance.setZoomAndCenter(16, center);
-                if (productMapMarker) {
-                    productMapMarker.setPosition(center);
-                }
+                productMap.setZoomAndCenter(16, center);
+                productMarker?.setPosition(center);
+                productMap.resize();
             }
 
-            updatePublishLatLng({ lng: center[0], lat: center[1] });
-            setTimeout(() => productMapInstance && productMapInstance.resize(), 200);
+            updateProductLatLng({ lng: center[0], lat: center[1] }, false);
+            setTimeout(() => productMap && productMap.resize(), 200);
         }
 
-        function updatePublishLatLng(lnglat) {
-            const latInput = document.getElementById('publish-lat');
-            const lngInput = document.getElementById('publish-lng');
+        function bindProductSearchEvents() {
+            const searchButton = document.getElementById('product-location-search-btn');
+            const locationInput = document.getElementById('product-location-input');
+            if (!searchButton || !locationInput || searchButton.dataset.bound === 'true') {
+                return;
+            }
+
+            const runSearch = () => {
+                searchProductLocation();
+            };
+
+            searchButton.addEventListener('click', runSearch);
+            locationInput.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    runSearch();
+                }
+            });
+
+            if (productAutoComplete) {
+                productAutoComplete.on('select', function(event) {
+                    if (event.poi && event.poi.location) {
+                        focusProductLngLat(event.poi.location);
+                    } else if (event.poi && event.poi.name) {
+                        locationInput.value = event.poi.name;
+                        runSearch();
+                    }
+                });
+            }
+
+            searchButton.dataset.bound = 'true';
+        }
+
+        function searchProductLocation() {
+            const searchButton = document.getElementById('product-location-search-btn');
+            const locationInput = document.getElementById('product-location-input');
+            if (!searchButton || !locationInput) {
+                return;
+            }
+
+            if (!productMap) {
+                console.warn('Product map not ready yet');
+                return;
+            }
+
+            const keyword = locationInput.value.trim();
+            if (!keyword) {
+                alert('请输入要搜索的地点');
+                return;
+            }
+
+            if (!productPlaceSearch) {
+                console.warn('Product PlaceSearch is not ready');
+                return;
+            }
+
+            const originalText = searchButton.textContent;
+            searchButton.disabled = true;
+            searchButton.textContent = '搜索中...';
+
+            productPlaceSearch.search(keyword, function(status, result) {
+                searchButton.disabled = false;
+                searchButton.textContent = originalText;
+
+                if (status === 'complete' && result.poiList && result.poiList.pois.length) {
+                    const poi = result.poiList.pois[0];
+                    if (poi.name && locationInput) {
+                        locationInput.value = poi.name;
+                    }
+                    if (poi.location) {
+                        focusProductLngLat(poi.location);
+                    } else if (productGeocoder) {
+                        productGeocoder.getLocation(poi.address || keyword, function(geoStatus, geoResult) {
+                            if (geoStatus === 'complete' && geoResult.geocodes.length) {
+                                focusProductLngLat(geoResult.geocodes[0].location);
+                            } else {
+                                alert('未找到匹配的位置，请尝试更精确的描述');
+                            }
+                        });
+                    }
+                } else {
+                    alert('未找到匹配的位置，请尝试更精确的描述');
+                }
+            });
+        }
+
+        function focusProductLngLat(lnglat) {
+            if (!lnglat || !productMap || !productMarker) return;
+            const isArray = Array.isArray(lnglat);
+            const lngValue = isArray ? lnglat[0] : (typeof lnglat.getLng === 'function' ? lnglat.getLng() : lnglat.lng);
+            const latValue = isArray ? lnglat[1] : (typeof lnglat.getLat === 'function' ? lnglat.getLat() : lnglat.lat);
+            if (typeof lngValue === 'undefined' || typeof latValue === 'undefined') {
+                return;
+            }
+            const coords = [lngValue, latValue];
+            productMarker.setPosition(coords);
+            productMap.setZoomAndCenter(18, coords);
+            updateProductLatLng({ lng: lngValue, lat: latValue }, true);
+        }
+
+        function updateProductLatLng(lnglat, shouldReverse = false) {
+            const latInput = document.getElementById('product-lat');
+            const lngInput = document.getElementById('product-lng');
+            const locationInput = document.getElementById('product-location-input');
             if (!latInput || !lngInput || !lnglat) return;
 
             const latValue = typeof lnglat.getLat === 'function' ? lnglat.getLat() : lnglat.lat;
@@ -555,9 +684,17 @@
 
             latInput.value = Number(latValue || 0).toFixed(8);
             lngInput.value = Number(lngValue || 0).toFixed(8);
+
+            if (shouldReverse && productGeocoder) {
+                productGeocoder.getAddress([lngValue, latValue], function(status, result) {
+                    if (status === 'complete' && result.regeocode && locationInput) {
+                        locationInput.value = result.regeocode.formattedAddress;
+                    }
+                });
+            }
         }
 
-        function openPublishModal() {
+        function openProductModal() {
             const modal = document.getElementById('publishProductModal');
             if (!modal) return;
             modal.classList.remove('hidden');
@@ -565,14 +702,14 @@
             document.body.style.overflow = 'hidden';
 
             setTimeout(() => {
-                initializePublishMap();
-                if (productMapInstance) {
-                    productMapInstance.resize();
+                initProductMap();
+                if (productMap) {
+                    productMap.resize();
                 }
             }, 200);
         }
 
-        function closePublishModal() {
+        function closeProductModal() {
             const modal = document.getElementById('publishProductModal');
             if (!modal) return;
             modal.classList.add('hidden');
@@ -650,7 +787,7 @@
             const params = new URLSearchParams(window.location.search);
             if (params.get('trigger') === 'publish') {
                 setTimeout(() => {
-                    openPublishModal();
+                    openProductModal();
                     params.delete('trigger');
                     const newQuery = params.toString();
                     const newUrl = window.location.pathname + (newQuery ? `?${newQuery}` : '') + window.location.hash;
